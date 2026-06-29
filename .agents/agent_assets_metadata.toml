@@ -108,3 +108,9 @@ id = "YlndDOWl5N-LErpyh2mW0"
 uri = "file://itosb_firmalar.csv"
 type = "table"
 title = "ITOSB Firma Listesi (132 şirket)"
+
+[[outputs]]
+id = "mFkhrxscEizkJg76yKGhC"
+uri = "file://dosb_firmalar.csv"
+type = "table"
+title = "DOSB Firma Listesi (188 şirket)"
