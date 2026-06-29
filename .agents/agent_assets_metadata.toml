@@ -102,3 +102,9 @@ id = "Lm7yVxZARbiKDBZCcZBwN"
 uri = "file://gosb_firmalar.csv"
 type = "table"
 title = "GOSB Firma Listesi (217 şirket)"
+
+[[outputs]]
+id = "YlndDOWl5N-LErpyh2mW0"
+uri = "file://itosb_firmalar.csv"
+type = "table"
+title = "ITOSB Firma Listesi (132 şirket)"
