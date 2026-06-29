@@ -96,3 +96,9 @@ id = "bFU484MhAGzlLHJdZjk22"
 uri = "file://attached_assets/waf_cve_analiz_raporu.md"
 type = "text"
 title = "WAF/CVE Analiz Raporu — Düzeltilmiş"
+
+[[outputs]]
+id = "Lm7yVxZARbiKDBZCcZBwN"
+uri = "file://gosb_firmalar.csv"
+type = "table"
+title = "GOSB Firma Listesi (217 şirket)"
