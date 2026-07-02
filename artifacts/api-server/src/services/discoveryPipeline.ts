@@ -227,6 +227,7 @@ export async function preScreenPendingCandidates(limit: number = 500): Promise<{
       }
 
       await db.update(leadCandidatesTable).set({
+        scanStatus: "pending",
         isAlive: true,
         httpStatus: liveness.httpStatus,
         responseTimeMs: liveness.responseTimeMs,

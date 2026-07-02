@@ -3492,20 +3492,24 @@ startup()
     void cleanupStaleRunningJobs();
     void cleanupStaleDiscoveryRuns();
 
-    // ─── Startup: Yarım kalan "scanning" lead adaylarını sıfırla ────────────
-    // Server restart sırasında scan başlamış ama tamamlanamamış adaylar "scanning"
-    // durumunda takılı kalır; lead_qual sorgusu yalnızca "pending" çektiğinden
+    // ─── Startup: Yarım kalan "scanning" / "prescreening" lead adaylarını sıfırla ─
+    // Server restart sırasında:
+    //   • "scanning"     → lead_qual tarafından alınmış ama bitirilememiş
+    //   • "prescreening" → preScreen tarafından claim edilmiş, tier2'ye terfi etmiş
+    //                       ama scanStatus='pending' yazılmamış (promotion bug recovery)
+    // Her iki durumda da lead_qual sorgusu yalnızca "pending" çektiğinden
     // bunlar hiç işlenmez. Restart'ta hepsini "pending"e döndür.
     void (async () => {
       try {
         const { rowCount } = await db.execute(
-          sql`UPDATE lead_candidates SET scan_status = 'pending', updated_at = now() WHERE scan_status = 'scanning'`
+          sql`UPDATE lead_candidates SET scan_status = 'pending', updated_at = now()
+              WHERE scan_status IN ('scanning', 'prescreening')`
         );
         if ((rowCount ?? 0) > 0) {
-          logger.warn({ count: rowCount }, "Startup: stale 'scanning' lead adayları 'pending'e döndürüldü");
+          logger.warn({ count: rowCount }, "Startup: stale 'scanning'/'prescreening' lead adayları 'pending'e döndürüldü");
         }
       } catch (e) {
-        logger.error({ err: String(e) }, "Startup: stale scanning lead cleanup başarısız");
+        logger.error({ err: String(e) }, "Startup: stale scanning/prescreening lead cleanup başarısız");
       }
     })();
 
