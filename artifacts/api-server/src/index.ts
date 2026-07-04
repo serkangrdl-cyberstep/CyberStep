@@ -69,6 +69,17 @@ import {
 import cron from "node-cron";
 import bcrypt from "bcryptjs";
 
+// Güvenlik ağı: beklenmeyen/ele alınmamış hatalar tüm sunucuyu çökertmesin.
+// Bu, kritik bir hatayı gizlemek için değil, tekil istek/cron içindeki
+// öngörülemeyen edge-case'lerin (ör. bozuk URL, ağ hatası) process'i
+// öldürüp cron'ları/kuyruğu kesintiye uğratmasını önlemek içindir.
+process.on("uncaughtException", (err) => {
+  logger.error({ err }, "Uncaught exception yakalandı — process çökmedi");
+});
+process.on("unhandledRejection", (reason) => {
+  logger.error({ err: reason }, "Unhandled promise rejection yakalandı — process çökmedi");
+});
+
 const rawPort = process.env["PORT"];
 
 if (!rawPort) {

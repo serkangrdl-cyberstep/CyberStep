@@ -314,34 +314,62 @@ const SHADOW_IT_CATALOG: Array<{
 
 async function fetchHomepage(domain: string): Promise<string> {
   return new Promise((resolve) => {
+    let settled = false;
+    const finish = (value: string) => {
+      if (settled) return;
+      settled = true;
+      resolve(value);
+    };
     const makeRequest = (url: string, redirectCount = 0) => {
-      if (redirectCount > 5) { resolve(""); return; }
+      if (settled) return;
+      if (redirectCount > 5) { finish(""); return; }
+      try {
+        new URL(url);
+      } catch {
+        finish("");
+        return;
+      }
       const isHttps = url.startsWith("https");
       const mod = isHttps ? https : http;
-      const req = mod.request(
-        url,
-        { method: "GET", timeout: 8000, headers: { "User-Agent": "Mozilla/5.0 (compatible; CyberStep.io Scanner)", "Accept": "text/html" } },
-        (res) => {
-          if ([301, 302, 303, 307, 308].includes(res.statusCode ?? 0) && res.headers.location) {
-            const loc = res.headers.location;
-            const next = loc.startsWith("http") ? loc : `${isHttps ? "https" : "http"}://${domain}${loc}`;
-            res.destroy();
-            makeRequest(next, redirectCount + 1);
-            return;
+      try {
+        const req = mod.request(
+          url,
+          { method: "GET", timeout: 8000, headers: { "User-Agent": "Mozilla/5.0 (compatible; CyberStep.io Scanner)", "Accept": "text/html" } },
+          (res) => {
+            try {
+              if ([301, 302, 303, 307, 308].includes(res.statusCode ?? 0) && res.headers.location) {
+                const loc = res.headers.location;
+                const next = loc.startsWith("http") ? loc : `${isHttps ? "https" : "http"}://${domain}${loc.startsWith("/") ? loc : `/${loc}`}`;
+                res.destroy();
+                try {
+                  new URL(next);
+                } catch {
+                  finish("");
+                  return;
+                }
+                makeRequest(next, redirectCount + 1);
+                return;
+              }
+              let data = "";
+              let size = 0;
+              res.on("data", (chunk: Buffer) => {
+                size += chunk.length;
+                if (size > 512 * 1024) { res.destroy(); finish(data); return; }
+                data += chunk.toString();
+              });
+              res.on("end", () => finish(data));
+              res.on("error", () => finish(data));
+            } catch {
+              finish("");
+            }
           }
-          let data = "";
-          let size = 0;
-          res.on("data", (chunk: Buffer) => {
-            size += chunk.length;
-            if (size > 512 * 1024) { res.destroy(); resolve(data); return; }
-            data += chunk.toString();
-          });
-          res.on("end", () => resolve(data));
-        }
-      );
-      req.on("error", () => resolve(""));
-      req.on("timeout", () => { req.destroy(); resolve(""); });
-      req.end();
+        );
+        req.on("error", () => finish(""));
+        req.on("timeout", () => { req.destroy(); finish(""); });
+        req.end();
+      } catch {
+        finish("");
+      }
     };
     makeRequest(`https://${domain}`);
   });
