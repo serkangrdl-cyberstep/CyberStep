@@ -1939,10 +1939,37 @@ async function startup() {
         ELSE 'low'
       END
   `);
+  await runLivenessTimeoutBugFixOnce();
+  maybeSeedDemoReports();
+}
+
+// One-time data fix marker table — startup() runs on every process boot (including
+// crash-loop restarts), so any "one-time" DB fix gated only by a WHERE clause on
+// mutable columns (scan_status/is_alive/http_status) will keep re-firing every
+// restart and can re-queue domains that a cron already legitimately re-processed
+// in the meantime. This table makes such fixes idempotent across restarts.
+async function ensureOneTimeFixesTable(): Promise<void> {
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS applied_one_time_fixes (
+      fix_key    TEXT PRIMARY KEY,
+      applied_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `);
+}
+
+async function runLivenessTimeoutBugFixOnce(): Promise<void> {
+  await ensureOneTimeFixesTable();
+  const FIX_KEY = "lead_candidates_liveness_timeout_reset_2026_07";
+  const already = await db.execute(sql`
+    SELECT 1 FROM applied_one_time_fixes WHERE fix_key = ${FIX_KEY}
+  `);
+  if (already.rowCount && already.rowCount > 0) return;
+
   // Liveness timeout bug fix: outer timeout was 9s but checkLiveness tries 2 URLs × 8s each.
   // When HTTPS timed out at 8s, only 1s remained for HTTP fallback — live domains were
   // incorrectly marked dead (scan_status=failed, http_status=0, is_alive=false).
   // Reset these tier2 candidates back to pending so they get re-scanned with correct 18s timeout.
+  // Runs exactly once (tracked via applied_one_time_fixes), not on every restart.
   const resetResult = await db.execute(sql`
     UPDATE lead_candidates
     SET scan_status = 'pending',
@@ -1954,8 +1981,11 @@ async function startup() {
       AND is_alive    = false
       AND http_status = 0
   `);
-  logger.info({ resetCount: resetResult.rowCount }, "Liveness timeout bug: yanlış 'dead' etiketli tier2 domainler pending'e alındı");
-  maybeSeedDemoReports();
+  logger.info({ resetCount: resetResult.rowCount }, "Liveness timeout bug: yanlış 'dead' etiketli tier2 domainler pending'e alındı (tek seferlik)");
+  await db.execute(sql`
+    INSERT INTO applied_one_time_fixes (fix_key) VALUES (${FIX_KEY})
+    ON CONFLICT (fix_key) DO NOTHING
+  `);
 }
 
 function maybeSeedDemoReports(): void {
