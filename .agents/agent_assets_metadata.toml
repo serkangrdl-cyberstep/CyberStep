@@ -150,3 +150,57 @@ id = "AVToUuDEYsfmUeOiBJfdM"
 uri = "file://exports/utib_uye_firmalar_website_olanlar.csv"
 type = "table"
 title = "UTİB Üye Firmalar - Web Sitesi Olanlar (1.176 benzersiz domain)"
+
+[[outputs]]
+id = "mFNN4q2RZjPLfwJK4OMxQ"
+uri = "file://exports/iib_tum_birlikler_uye_firmalar.csv"
+type = "table"
+title = "İİB Tüm Birlikler - Birleşik Tam Liste (11.566 firma)"
+
+[[outputs]]
+id = "WIT5hjagw_KWhY-TcS5go"
+uri = "file://exports/iib_tum_birlikler_website_olanlar.csv"
+type = "table"
+title = "İİB Tüm Birlikler - Web Sitesi Olanlar (3.067 benzersiz domain)"
+
+[[outputs]]
+id = "9I9tkdXnPJbAi-uuY-90Z"
+uri = "file://exports/iib_iib_findik_website_olanlar.csv"
+type = "table"
+title = "İİB-FINDIK - Web Sitesi Olanlar (81 domain)"
+
+[[outputs]]
+id = "FkpjqSbsAgnfIv-ZPmx3h"
+uri = "file://exports/iib_iib_gemi_website_olanlar.csv"
+type = "table"
+title = "İİB-GEMİ - Web Sitesi Olanlar (147 domain)"
+
+[[outputs]]
+id = "OYnJCtordKAvosNLLUJMd"
+uri = "file://exports/iib_iib_hububat_website_olanlar.csv"
+type = "table"
+title = "İİB-HUBUBAT - Web Sitesi Olanlar (671 domain)"
+
+[[outputs]]
+id = "KMnJVsDikzl_z3XauLMrG"
+uri = "file://exports/iib_iib_kuru_meyve_website_olanlar.csv"
+type = "table"
+title = "İİB-KURU MEYVE - Web Sitesi Olanlar (85 domain)"
+
+[[outputs]]
+id = "4Es2cKU9LXTvTB3wFUNLa"
+uri = "file://exports/iib_iib_mob_kagit_ve_orman_ihr_brl_website_olanlar.csv"
+type = "table"
+title = "İİB-MOB.KAĞIT VE ORMAN İHR.BRL. - Web Sitesi Olanlar (1.922 domain)"
+
+[[outputs]]
+id = "9ToRjWk6rEi5CKUmuf1N5"
+uri = "file://exports/iib_iib_su_urunleri_website_olanlar.csv"
+type = "table"
+title = "İİB-SU ÜRÜNLERİ - Web Sitesi Olanlar (161 domain)"
+
+[[outputs]]
+id = "kJFq8bbYf7Xju48K-T2YO"
+uri = "file://exports/iib_iib_yas_meyve_website_olanlar.csv"
+type = "table"
+title = "İİB-YAŞ MEYVE - Web Sitesi Olanlar (218 domain)"
