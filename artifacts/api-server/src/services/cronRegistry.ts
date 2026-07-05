@@ -286,6 +286,43 @@ export function getCronFn(name: string): (() => Promise<void>) | undefined {
   return cronFns.get(name);
 }
 
+// ─── Watchdog: force-clear a wedged isRunning flag ────────────────────────────
+// If a cron's async fn() (or a step before its own "started" log, e.g. an
+// initial pool.query that hangs on a stuck connection/lock rather than
+// rejecting) never resolves, isRunning stays true in-memory forever and every
+// future tick silently hits the overlap-skip branch — with no further log
+// line, since the skip path only logs once per call and nothing re-attempts
+// after that. This starves the cron indefinitely without any crash or error
+// surfacing. Run this once at startup: it periodically force-resets any entry
+// stuck "running" past MAX_RUN_MS so the next scheduled tick can proceed.
+const MAX_RUN_MS = 25 * 60 * 1000; // generous vs. longest known job (~13 min)
+
+export function startCronWatchdog(intervalMs = 60_000): void {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [name, entry] of registry.entries()) {
+      if (entry.state.isRunning && now - entry.startedAt > MAX_RUN_MS) {
+        const stuckForMs = now - entry.startedAt;
+        logger.warn(
+          { name, stuckForMs },
+          `Cron watchdog: ${name} isRunning ${Math.round(stuckForMs / 1000)}s'dir takılı — zorla temizleniyor`,
+        );
+        entry.state.isRunning = false;
+        entry.state.lastRunStatus = "error";
+        entry.state.lastError = `Watchdog: run exceeded ${MAX_RUN_MS / 1000}s and was force-cleared`;
+        // Mark any orphaned "running" DB row for this job as errored too.
+        pool.query(
+          `UPDATE cron_job_runs SET ended_at=NOW(), status='error',
+             error_message='Watchdog: run exceeded max duration, force-cleared',
+             duration_ms=EXTRACT(EPOCH FROM (NOW()-started_at))*1000
+           WHERE job_name=$1 AND status='running'`,
+          [name],
+        ).catch(() => {});
+      }
+    }
+  }, intervalMs).unref();
+}
+
 // ─── Read helpers ─────────────────────────────────────────────────────────────
 
 export function cronGetState(name: string): CronState {

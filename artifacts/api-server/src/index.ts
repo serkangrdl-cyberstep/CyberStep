@@ -24,7 +24,7 @@ import { getSourceQualityStats } from "./routes/admin-panel/source-stats";
 import { qualifyPendingCandidates, preScreenPendingCandidates, getISOWeek } from "./services/discoveryPipeline";
 import { generateEcosystemReport } from "./services/ecosystemReportService";
 import { checkPhishingCertificates } from "./services/ctPhishingMonitor";
-import { cronStart, cronIsEnabled, cronGetLimit, wrapCron, getCronFn, cleanupStaleRunningJobs, cleanupStaleDiscoveryRuns } from "./services/cronRegistry";
+import { cronStart, cronIsEnabled, cronGetLimit, wrapCron, getCronFn, cleanupStaleRunningJobs, cleanupStaleDiscoveryRuns, startCronWatchdog } from "./services/cronRegistry";
 import { runCVEFeedCheck } from "./services/cve/cveOrchestrator";
 import { setAiCostLogger } from "@workspace/ai";
 import { logAiCost } from "./services/aiCostTracker";
@@ -3531,6 +3531,7 @@ startup()
     // ─── Startup: Stale "running" kayıtları temizle ─────────────────────────
     // Server restart sırasında tamamlanamayan "running" durumundaki cron kayıtlarını düzelt.
     void cleanupStaleRunningJobs();
+    startCronWatchdog();
     void cleanupStaleDiscoveryRuns();
 
     // ─── Startup: Yarım kalan "scanning" / "prescreening" lead adaylarını sıfırla ─
