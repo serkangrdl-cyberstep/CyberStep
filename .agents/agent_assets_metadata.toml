@@ -114,3 +114,15 @@ id = "mFkhrxscEizkJg76yKGhC"
 uri = "file://dosb_firmalar.csv"
 type = "table"
 title = "DOSB Firma Listesi (188 şirket)"
+
+[[outputs]]
+id = "FsC_UCAuh9LK0FTAikZtl"
+uri = "file://exports/oib_uye_firmalar.csv"
+type = "table"
+title = "OİB Üye Firmalar - Tüm Liste (10.350 kayıt)"
+
+[[outputs]]
+id = "zCb6-cx2fL_QUhBwDGXhk"
+uri = "file://exports/oib_uye_firmalar_website_olanlar.csv"
+type = "table"
+title = "OİB Üye Firmalar - Sadece Web Sitesi Olanlar (3.726 kayıt)"
