@@ -1,11 +1,18 @@
 /**
- * Bing arama motoru dorking ile Türk domain keşfi.
+ * Arama motoru dorking ile Türk domain keşfi.
  *
- * API key gerektirmez — Bing arama sonuçlarını scrape eder.
- * .tr uzantılı domainleri lead_candidates tablosuna ekler.
+ * API key gerektirmez — DuckDuckGo HTML (html.duckduckgo.com/html) arama
+ * sonuçlarını scrape eder. .tr uzantılı domainleri lead_candidates tablosuna
+ * ekler.
+ *
+ * Not: Daha önce Bing kullanılıyordu ancak Bing'in HTML yapısı/anti-bot
+ * kontrolleri değişti ve scraper sürekli 0 sonuç dönmeye başladı (crawler'a
+ * boş/JS-render edilmiş sayfa döndürüyor gibi görünüyor). DuckDuckGo'nun
+ * "html" (no-JS, lite) endpoint'i scraping'e daha toleranslı ve sabit bir
+ * markup'a sahip.
  *
  * Rate limit: Sorgular arası 5 saniye bekleme, günde 1 kez çalışır.
- * Not: Bing HTML yapısı değişirse selector güncellenmesi gerekebilir.
+ * Not: DuckDuckGo HTML yapısı değişirse selector güncellenmesi gerekebilir.
  */
 import axios from "axios";
 import * as cheerio from "cheerio";
@@ -15,7 +22,7 @@ import { eq, sql } from "drizzle-orm";
 import { logger } from "../../lib/logger";
 import { shouldExcludeFromPipeline } from "../leadScoringService";
 
-const BING_SEARCH_URL = "https://www.bing.com/search";
+const DUCKDUCKGO_SEARCH_URL = "https://html.duckduckgo.com/html/";
 const RATE_LIMIT_MS = 5_000;
 
 const DORK_QUERIES = [
@@ -24,6 +31,8 @@ const DORK_QUERIES = [
   { q: 'site:com.tr "ERP" "üretim" OR "imalat"', label: "ERP İmalat .com.tr" },
   { q: 'site:com.tr "Microsoft 365" OR "Office 365"', label: "M365 kullananlar" },
   { q: 'site:com.tr "siber güvenlik" OR "bilgi güvenliği"', label: "Siber güvenlik bilinçli" },
+  { q: 'site:org.tr "dernek" OR "vakıf" "kurumsal"', label: "Dernek/Vakıf .org.tr" },
+  { q: 'site:com.tr "ISO 27001" OR "bilgi güvenliği yönetim sistemi"', label: "ISO 27001 .com.tr" },
 ];
 
 function extractRootDomain(hostname: string): string {
@@ -33,23 +42,31 @@ function extractRootDomain(hostname: string): string {
   return parts.slice(-2).join(".");
 }
 
-function parseDomainsFromBingHtml(html: string): string[] {
+function parseDomainsFromDuckDuckGoHtml(html: string): string[] {
   const $ = cheerio.load(html);
   const domains: string[] = [];
 
-  $("li.b_algo h2 a, li.b_algo .b_title h2 a, #b_results .b_algo h2 a").each((_, el) => {
+  $("a.result__a, a.result__url").each((_, el) => {
     const href = $(el).attr("href");
     if (!href) return;
     try {
-      const url = new URL(href);
-      const hostname = url.hostname.replace(/^www\./, "");
+      // DuckDuckGo html.duckduckgo.com sonuçları çoğu zaman
+      // //duckduckgo.com/l/?uddg=<encoded-real-url>&... redirect linki döner.
+      const raw = href.startsWith("//") ? `https:${href}` : href;
+      const url = new URL(raw, "https://duckduckgo.com");
+      let target = url;
+      const uddg = url.searchParams.get("uddg");
+      if (uddg) {
+        target = new URL(decodeURIComponent(uddg));
+      }
+      const hostname = target.hostname.replace(/^www\./, "");
       if (hostname.endsWith(".tr")) domains.push(hostname);
     } catch {}
   });
 
-  $("cite, .b_attribution cite").each((_, el) => {
+  $(".result__url, .result__snippet").each((_, el) => {
     const text = $(el).text().trim().toLowerCase();
-    const match = text.match(/^([a-z0-9.-]+\.tr)/);
+    const match = text.match(/([a-z0-9.-]+\.tr)\b/);
     if (match?.[1]) domains.push(match[1]);
   });
 
@@ -77,18 +94,22 @@ export async function runSearchDorking(): Promise<SearchDorkingResult> {
 
     for (const dork of DORK_QUERIES) {
       try {
-        const resp = await axios.get(BING_SEARCH_URL, {
-          params: { q: dork.q, count: 50 },
-          headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-            "Accept-Language": "tr-TR,tr;q=0.9",
-            "Accept": "text/html,application/xhtml+xml",
+        const resp = await axios.post(
+          DUCKDUCKGO_SEARCH_URL,
+          new URLSearchParams({ q: dork.q, kl: "tr-tr" }).toString(),
+          {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+              "Accept-Language": "tr-TR,tr;q=0.9",
+              "Accept": "text/html,application/xhtml+xml",
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            timeout: 15_000,
           },
-          timeout: 15_000,
-        });
+        );
 
         const html = typeof resp.data === "string" ? resp.data : "";
-        const domains = parseDomainsFromBingHtml(html);
+        const domains = parseDomainsFromDuckDuckGoHtml(html);
 
         for (const raw of domains) {
           const root = extractRootDomain(raw);
@@ -111,7 +132,7 @@ export async function runSearchDorking(): Promise<SearchDorkingResult> {
       const inserted = await db.insert(leadCandidatesTable).values({
         domain,
         source: "search_dorking",
-        sourceData: { discoveryMethod: "bing_dorking", query: queryLabel },
+        sourceData: { discoveryMethod: "duckduckgo_dorking", query: queryLabel },
         scanStatus: "pending",
       }).onConflictDoUpdate({
         target: leadCandidatesTable.domain,
