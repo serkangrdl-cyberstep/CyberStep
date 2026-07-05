@@ -407,8 +407,18 @@ export async function rematchCveDomains(): Promise<{ newMatches: number; cveCoun
   type ShadowService = { name: string; category?: string; version?: string };
 
   let totalNew = 0;
+  let processedCves = 0;
 
   for (const cve of cves) {
+    // Event loop starvation koruması: 1392 CVE x 35218 domain gibi büyük veri
+    // setlerinde bu senkron döngü saatlerce Node event loop'unu bloke edip diğer
+    // cron'ların (örn. lead_qual) tetiklenmesini engelleyebiliyordu. Her 10 CVE'de
+    // bir event loop'a kontrolü geri veriyoruz.
+    processedCves++;
+    if (processedCves % 10 === 0) {
+      await new Promise<void>((resolve) => setImmediate(resolve));
+    }
+
     const products = (cve.affectedProducts ?? []) as AffectedProduct[];
 
     const toInsert: Array<{

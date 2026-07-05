@@ -141,7 +141,10 @@ async function classifyWithClaude(
 
   try {
     const ai = getClaudeAiFn();
-    const result = await ai(`Feed öğesi CyberStep.io için alakalı mı?
+    // Timeout guard: yapay zeka çağrısı takılırsa (ağ sorunu vb.) bu cron
+    // saatlerce "running" durumunda kilitli kalmasın diye 25sn sınır konuldu.
+    const result = await Promise.race([
+      ai(`Feed öğesi CyberStep.io için alakalı mı?
 CyberStep: Türkiye işletme siber güvenlik SaaS platformu.
 Müşteriler: SOC/NOC servisi, CVE izleme, Fortinet entegrasyonu, KVKK uyum.
 
@@ -150,7 +153,11 @@ Başlık: ${item.title}
 Kategori: ${category}
 
 Sadece JSON döndür:
-{"relevant":true,"score":0-100,"tags":["fortinet","ransomware","kvkk"],"reason":"1 cümle"}`);
+{"relevant":true,"score":0-100,"tags":["fortinet","ransomware","kvkk"],"reason":"1 cümle"}`),
+      new Promise<string>((_, reject) =>
+        setTimeout(() => reject(new Error("classifyWithClaude timeout")), 25_000),
+      ),
+    ]);
 
     const cleaned = result.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     const parsed = JSON.parse(cleaned) as { relevant: boolean; score: number; tags: string[]; reason: string };
