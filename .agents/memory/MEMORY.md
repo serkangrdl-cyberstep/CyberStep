@@ -52,4 +52,5 @@
 - [WAF domain_scans + AI context fix](waf-scoring-fix.md) — customer_tech_stack fallback (≥70 conf) OR-merged into domain_scans.waf_detected; waf_provider is composite string ("fortinet, cloudflare"); buildSecurityContext checks waf_detected not just has_cdn
 - [Domain Enrichment Layers](domain-enrichment.md) — Katman 2 (sector keyword) live; Katman 1 (geo/IP) blocked by CDN; Katman 3 (registry) OpenCorporates-based; city data is reliable ONLY from OpenCorporates registered_address
 - [Cron wedged isRunning watchdog](cron-wedged-isrunning-watchdog.md) — wrapCron's in-memory overlap guard can wedge a cron forever with zero further logs/DB rows; needs active watchdog, not just startup DB cleanup
+- [node-cron missed execution silent drop](node-cron-missed-execution-drop.md) — a "missed execution/blocking IO" warning can permanently stop just that task's future ticks; periodic (not startup-only) DB-driven catch-up sweep self-heals it
 - [Event loop starvation from cron loops](event-loop-starvation-crons.md) — unbounded sync O(N×M) loops in one cron (no await) can silently vanish another unrelated cron's ticks; diagnose via cron_job_runs status='running' age

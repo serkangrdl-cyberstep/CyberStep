@@ -3555,10 +3555,14 @@ startup()
       }
     })();
 
-    // ─── Startup Catch-up: Kaçırılan Gece Cron'larını Çalıştır ──────────────
+    // ─── Cron Catch-up: Kaçırılan Cron'ları Çalıştır ────────────────────────
     // Deployment restart sırasında pencereyi kaçıran gece cron'larını telafi eder.
-    // Her cron için son çalışma DB'den okunur; >25 saat geçmişse 30s delay ile çalıştırılır.
-    setImmediate(async () => {
+    // Ayrıca periyodik olarak (10dk'da bir) tekrar çalıştırılır: node-cron
+    // kütüphanesi ara sıra bir "missed execution" event-loop bloklanmasından
+    // sonra o görevi bir daha hiç tetiklemeyebiliyor (kütüphane kusuru) — bu
+    // periyodik sweep, restart beklemeden bu tür sessiz düşüşleri telafi eder.
+    // Her cron için son çalışma DB'den okunur; eşik aşılmışsa delay ile çalıştırılır.
+    async function runCronCatchUpSweep(initialDelayMs: number): Promise<void> {
       const CATCH_UP_CRONS = [
         // External scan / enrichment — missed = stale threat intel
         { name: "crtsh",                    thresholdHours: 5   },  // her 4h → 5h buffer
@@ -3581,8 +3585,13 @@ startup()
         { name: "fabric_block_verify",      thresholdHours: 7   },
         // Hourly (2h threshold)
         { name: "certstream_dispatch",       thresholdHours: 2   },
-        { name: "lead_prescreen",            thresholdHours: 1   },
-        { name: "lead_qual",                thresholdHours: 2   },
+        // lead_prescreen/lead_qual her 5 dk'da bir çalışmalı; node-cron ara sıra
+        // bir "missed execution" event loop bloklanmasından sonra o görevi bir
+        // daha HİÇ tetiklemiyor (kütüphane kusuru, restart olmadan kendi kendine
+        // düzelmiyor). Düşük eşik + periyodik sweep (aşağıda) bunu ~10-20 dk
+        // içinde kendiliğinden telafi eder.
+        { name: "lead_prescreen",            thresholdHours: 0.34 },
+        { name: "lead_qual",                thresholdHours: 0.34 },
         { name: "ecosystem_report",         thresholdHours: 200 },
         { name: "verification_queue",       thresholdHours: 2   },
         { name: "platform_smoke_test",      thresholdHours: 2   },
@@ -3676,7 +3685,7 @@ startup()
         );
         const lastRunMap = Object.fromEntries(rows.map((r) => [r.job_name, new Date(r.last_run)]));
 
-        let delayMs = 30_000;
+        let delayMs = initialDelayMs;
         for (const { name, thresholdHours } of CATCH_UP_CRONS) {
           const lastRun = lastRunMap[name];
           const hoursAgo = lastRun ? (Date.now() - lastRun.getTime()) / 3_600_000 : 999;
@@ -3685,7 +3694,7 @@ startup()
           const fn = getCronFn(name);
           if (!fn) continue;
 
-          logger.warn({ name, hoursAgo: Math.round(hoursAgo), delayMs }, `Startup catch-up: ${name} kaçırılmış — ${delayMs / 1000}s sonra çalıştırılacak`);
+          logger.warn({ name, hoursAgo: Math.round(hoursAgo * 100) / 100, delayMs }, `Catch-up: ${name} kaçırılmış — ${delayMs / 1000}s sonra çalıştırılacak`);
           const capturedFn = fn;
           const capturedDelay = delayMs;
           setTimeout(() => {
@@ -3694,9 +3703,12 @@ startup()
           delayMs += 90_000; // Aynı anda çakışmayı önlemek için 90s aralıklı başlat
         }
       } catch (err) {
-        logger.warn({ err }, "Startup catch-up kontrolü başarısız");
+        logger.warn({ err }, "Cron catch-up kontrolü başarısız");
       }
-    });
+    }
+
+    setImmediate(() => void runCronCatchUpSweep(30_000));
+    setInterval(() => void runCronCatchUpSweep(5_000), 10 * 60 * 1000).unref();
 
     const server = app.listen(port, (err) => {
       if (err) {
