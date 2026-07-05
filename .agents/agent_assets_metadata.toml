@@ -126,3 +126,15 @@ id = "zCb6-cx2fL_QUhBwDGXhk"
 uri = "file://exports/oib_uye_firmalar_website_olanlar.csv"
 type = "table"
 title = "OİB Üye Firmalar - Düzeltilmiş Web Sitesi Olanlar (3.643 benzersiz domain)"
+
+[[outputs]]
+id = "u-62Nzb1o5XbIj2Tg5NhS"
+uri = "file://exports/uib_uye_firmalar.csv"
+type = "table"
+title = "UİB Üye Firmalar - Tam Liste (17.483 kayıt)"
+
+[[outputs]]
+id = "y33KhnjRCIoIE8__1sYlk"
+uri = "file://exports/uib_uye_firmalar_website_olanlar.csv"
+type = "table"
+title = "UİB Üye Firmalar - Web Sitesi Olanlar (5.581 benzersiz domain)"
