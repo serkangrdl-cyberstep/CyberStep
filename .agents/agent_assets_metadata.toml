@@ -204,3 +204,51 @@ id = "kJFq8bbYf7Xju48K-T2YO"
 uri = "file://exports/iib_iib_yas_meyve_website_olanlar.csv"
 type = "table"
 title = "İİB-YAŞ MEYVE - Web Sitesi Olanlar (218 domain)"
+
+[[outputs]]
+id = "5O0vXG97Yupa0AGvdJOip"
+uri = "file://exports/immib_tum_birlikler_uye_firmalar.csv"
+type = "table"
+title = "İMMİB Tüm Birlikler - Üye Firmalar (Birleşik, Tekilleştirilmiş)"
+
+[[outputs]]
+id = "IMkiBbBGQE0lpPtYBz0X-"
+uri = "file://exports/immib_tum_birlikler_website_olanlar.csv"
+type = "table"
+title = "İMMİB Tüm Birlikler - Websitesi Olanlar (Birleşik)"
+
+[[outputs]]
+id = "RZcJwpfZLwf1jQTF-dOwL"
+uri = "file://exports/immib_cib_uye_firmalar_website_olanlar.csv"
+type = "table"
+title = "ÇİB - Websitesi Olanlar"
+
+[[outputs]]
+id = "uvPbhH_rLERy1w5PPtCgc"
+uri = "file://exports/immib_tet_uye_firmalar_website_olanlar.csv"
+type = "table"
+title = "TET - Websitesi Olanlar"
+
+[[outputs]]
+id = "qUDeGwAaDPd368MVLZK_W"
+uri = "file://exports/immib_iddmib_uye_firmalar_website_olanlar.csv"
+type = "table"
+title = "İDDMİB - Websitesi Olanlar"
+
+[[outputs]]
+id = "HF1gv_xd71Hss_Jv76mOI"
+uri = "file://exports/immib_ikmib_uye_firmalar_website_olanlar.csv"
+type = "table"
+title = "İKMİB - Websitesi Olanlar"
+
+[[outputs]]
+id = "maOfH93R3doBiUW8QVqEP"
+uri = "file://exports/immib_imib_uye_firmalar_website_olanlar.csv"
+type = "table"
+title = "İMİB - Websitesi Olanlar"
+
+[[outputs]]
+id = "bk1yMdwtiThAKnglhSEnS"
+uri = "file://exports/immib_jtr_uye_firmalar_website_olanlar.csv"
+type = "table"
+title = "JTR - Websitesi Olanlar"
