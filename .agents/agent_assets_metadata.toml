@@ -138,3 +138,15 @@ id = "y33KhnjRCIoIE8__1sYlk"
 uri = "file://exports/uib_uye_firmalar_website_olanlar.csv"
 type = "table"
 title = "UİB Üye Firmalar - Web Sitesi Olanlar (5.581 benzersiz domain)"
+
+[[outputs]]
+id = "yZ4WgIib5WWCvSS8YDHEg"
+uri = "file://exports/utib_uye_firmalar.csv"
+type = "table"
+title = "UTİB Üye Firmalar - Tam Liste (3.986 kayıt)"
+
+[[outputs]]
+id = "AVToUuDEYsfmUeOiBJfdM"
+uri = "file://exports/utib_uye_firmalar_website_olanlar.csv"
+type = "table"
+title = "UTİB Üye Firmalar - Web Sitesi Olanlar (1.176 benzersiz domain)"
