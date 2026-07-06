@@ -1,0 +1,377 @@
+You are a senior software architect and Python backend engineer.
+
+Build a production-ready platform called CyberStep Discovery Engine.
+
+Goal:
+Continuously discover Turkish company domains from multiple public sources and maintain a deduplicated database.
+
+The system must be modular, asynchronous and scalable.
+
+========================================
+TECH STACK
+========================================
+
+Backend:
+- Python 3.13
+- FastAPI
+- Asyncio
+- SQLAlchemy
+- PostgreSQL
+- Redis
+- Celery (optional)
+- Docker
+
+Frontend:
+- Simple admin dashboard
+- HTMX or React (minimal)
+
+========================================
+DATABASE
+========================================
+
+Create tables for:
+
+domains
+---------
+id
+domain
+root_domain
+company_name
+sector
+city
+country
+source
+first_seen
+last_seen
+status
+risk_score
+created_at
+updated_at
+
+sources
+---------
+id
+name
+type
+last_sync
+
+crawl_jobs
+
+technology
+
+dns_records
+
+ssl
+
+mail_security
+
+history
+
+========================================
+SOURCE CONNECTORS
+========================================
+
+Each source must be an independent module.
+
+Create connectors for:
+
+1. CertStream
+- realtime websocket listener
+- deduplicate
+- enqueue
+
+2. Bing Search
+Search examples:
+
+site:.tr
+site:com.tr
+
+sector keywords
+
+city keywords
+
+Extract domains.
+
+3. Public business directories
+
+Create a generic scraper framework.
+
+Each scraper should support
+
+pagination
+
+retry
+
+proxy support
+
+robots.txt awareness
+
+rate limiting
+
+4. Chamber of Commerce lists
+
+Importer
+
+5. Organized Industrial Zone company lists
+
+Importer
+
+6. XML Sitemap crawler
+
+Given a domain
+
+discover
+
+external links
+
+new domains
+
+7. Domain discovery crawler
+
+Visit websites
+
+Extract
+
+href
+
+canonical
+
+redirects
+
+external domains
+
+========================================
+PIPELINE
+========================================
+
+Every new domain
+
+↓
+
+Normalize
+
+↓
+
+Remove duplicates
+
+↓
+
+Check DNS
+
+↓
+
+Check HTTP
+
+↓
+
+SSL detection
+
+↓
+
+Technology detection
+
+↓
+
+Store
+
+↓
+
+Queue for enrichment
+
+========================================
+TECH DETECTION
+
+Detect:
+
+WordPress
+
+Cloudflare
+
+NGINX
+
+Apache
+
+IIS
+
+React
+
+Vue
+
+Angular
+
+Bootstrap
+
+jQuery
+
+Google Analytics
+
+Google Tag Manager
+
+Microsoft 365
+
+Google Workspace
+
+SPF
+
+DKIM
+
+DMARC
+
+HSTS
+
+HTTP2
+
+HTTP3
+
+CDN
+
+Hosting provider
+
+WAF
+
+========================================
+RISK SCORE
+
+Create a scoring engine.
+
+Example:
+
+No HTTPS
+
++20
+
+Expired certificate
+
++15
+
+No SPF
+
++10
+
+No DMARC
+
++15
+
+Old TLS
+
++10
+
+No security headers
+
++10
+
+Technology outdated
+
++20
+
+Generate overall score
+
+0-100
+
+========================================
+API
+
+Create REST API
+
+GET /domains
+
+GET /domain/{domain}
+
+POST /crawl
+
+POST /discover
+
+GET /stats
+
+GET /sources
+
+========================================
+DASHBOARD
+
+Dashboard showing
+
+Total domains
+
+New today
+
+Domains by source
+
+Domains by city
+
+Domains by sector
+
+Risk score distribution
+
+Technology statistics
+
+Live CertStream feed
+
+========================================
+SCALABILITY
+
+Everything must be modular.
+
+Every connector must implement
+
+BaseConnector
+
+with
+
+discover()
+
+parse()
+
+save()
+
+No duplicated code.
+
+========================================
+SCHEDULER
+
+Run
+
+CertStream continuously
+
+Bing daily
+
+Directories weekly
+
+Company lists monthly
+
+Technology refresh every 30 days
+
+========================================
+LOGGING
+
+Structured logging
+
+Retry
+
+Error handling
+
+Metrics
+
+========================================
+OUTPUT
+
+Generate:
+
+Complete project
+
+Folder structure
+
+Docker compose
+
+README
+
+.env.example
+
+Database migrations
+
+Unit tests
+
+Sample data
+
+API documentation
+
+Everything should be production-ready and well documented.
