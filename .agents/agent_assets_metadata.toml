@@ -276,3 +276,9 @@ id = "3sIleHyjBOXDiOJFuJvme"
 uri = "file://exports/tozok_benzersiz_domainler.csv"
 type = "table"
 title = "TÖZOK Benzersiz Domainler (297 domain)"
+
+[[outputs]]
+id = "OkKafkVi6p6OcwW0p0vCN"
+uri = "file://exports/gaosb_osb_firmalari.csv"
+type = "table"
+title = "GAOSB (Gaziantep OSB) Firma Listesi (1505 kayıt)"
