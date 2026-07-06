@@ -258,3 +258,21 @@ id = "WyZj4PDilDkfjhOSlv9Hs"
 uri = "file://exports/yok_universite_domainleri.xlsx"
 type = "table"
 title = "YÖK Üniversite Domain Listesi"
+
+[[outputs]]
+id = "QW-FtbAJvPRw8-sfQhi6c"
+uri = "file://exports/tozok_uye_okullar.csv"
+type = "table"
+title = "TÖZOK Üye Okullar (Tümü, 1151 kayıt)"
+
+[[outputs]]
+id = "znExue9pyElc2VgaApJzr"
+uri = "file://exports/tozok_uye_okullar_website_olanlar.csv"
+type = "table"
+title = "TÖZOK Üye Okullar - Web Sitesi Olanlar (1098 kayıt)"
+
+[[outputs]]
+id = "3sIleHyjBOXDiOJFuJvme"
+uri = "file://exports/tozok_benzersiz_domainler.csv"
+type = "table"
+title = "TÖZOK Benzersiz Domainler (297 domain)"
