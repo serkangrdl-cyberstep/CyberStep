@@ -281,7 +281,7 @@ title = "TÖZOK Benzersiz Domainler (297 domain)"
 id = "OkKafkVi6p6OcwW0p0vCN"
 uri = "file://exports/gaosb_osb_firmalari.csv"
 type = "table"
-title = "GAOSB Firmaları - Tüm Kayıtlar (1505, telefon/e-posta/domain dahil)"
+title = "GAOSB Firmaları - Tüm Kayıtlar (1505, düzeltilmiş domain)"
 
 [[outputs]]
 id = "hWWhrtv0ChKUa6OsfH3Ow"
@@ -311,7 +311,7 @@ title = "İAOSB İzmir Atatürk OSB Firmaları (985 kayıt)"
 id = "CWwTAM9B32htlAMFGJ_Nt"
 uri = "file://exports/gaosb_osb_firmalari_domain_olanlar.csv"
 type = "table"
-title = "GAOSB Firmaları - Domain Olanlar (1374)"
+title = "GAOSB Firmaları - Domain Olanlar (971, 597 benzersiz)"
 
 [[outputs]]
 id = "KqQ-Qw_BDCdODoSwEpCSb"
