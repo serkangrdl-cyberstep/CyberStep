@@ -1291,6 +1291,87 @@ router.get("/admin-panel/lead-discovery/candidates/:id/tech-stack", requireAdmin
   res.json(stack);
 });
 
+// ─── GET /api/admin-panel/lead-discovery/domain/:domain ──────────────────────
+// Tek bir domain için tam görünüm: lead_candidates satırı + aktif tech-stack kayıtları.
+// Var olan /candidates/:id/tech-stack rotasının domain bazlı, tek noktadan bakış eşdeğeri.
+router.get("/admin-panel/lead-discovery/domain/:domain", requireAdmin, async (req: Request, res: Response) => {
+  const domain = String(req.params["domain"] ?? "").trim().toLowerCase();
+  if (!domain) { res.status(400).json({ error: "domain parametresi gerekli" }); return; }
+
+  const [candidate] = await db.select().from(leadCandidatesTable)
+    .where(eq(leadCandidatesTable.domain, domain))
+    .limit(1);
+  if (!candidate) { res.status(404).json({ error: "Domain bulunamadı", domain }); return; }
+
+  const [techStack, scan] = await Promise.all([
+    db.select({
+      vendor: customerTechStackTable.vendor,
+      product: customerTechStackTable.product,
+      category: customerTechStackTable.category,
+      version: customerTechStackTable.version,
+      confidence: customerTechStackTable.confidence,
+      salesSignal: customerTechStackTable.salesSignal,
+      securityRisk: customerTechStackTable.securityRisk,
+      securityNote: customerTechStackTable.securityNote,
+      evidence: customerTechStackTable.evidence,
+      lastVerifiedAt: customerTechStackTable.lastVerifiedAt,
+    }).from(customerTechStackTable)
+      .where(and(
+        eq(customerTechStackTable.domain, domain),
+        eq(customerTechStackTable.isActive, true),
+      ))
+      .orderBy(asc(customerTechStackTable.category)),
+    candidate.scanId
+      ? db.select().from(domainScansTable).where(eq(domainScansTable.id, candidate.scanId)).limit(1)
+      : Promise.resolve([]),
+  ]);
+
+  res.json({ candidate, techStack, scan: scan[0] ?? null });
+});
+
+// ─── GET /api/admin-panel/lead-discovery/sources ─────────────────────────────
+// discovery_runs tablosundan kaynak bazlı özet: son senkronizasyon, toplam bulunan/eklenen,
+// ve o kaynaktan gelen lead_candidates sayısı — CyberStep Discovery Engine spek'indeki
+// GET /sources'a karşılık gelen agregasyon.
+router.get("/admin-panel/lead-discovery/sources", requireAdmin, async (_req: Request, res: Response) => {
+  res.set("Cache-Control", "no-store");
+
+  const runStats = await db.select({
+    source: discoveryRunsTable.source,
+    runCount: count(),
+    totalFound: sql<number>`COALESCE(SUM(${discoveryRunsTable.totalFound}), 0)`,
+    totalAdded: sql<number>`COALESCE(SUM(${discoveryRunsTable.totalAdded}), 0)`,
+    lastRunAt: sql<string | null>`MAX(${discoveryRunsTable.startedAt})`,
+    lastStatus: sql<string | null>`(ARRAY_AGG(${discoveryRunsTable.status} ORDER BY ${discoveryRunsTable.startedAt} DESC))[1]`,
+  }).from(discoveryRunsTable)
+    .groupBy(discoveryRunsTable.source)
+    .orderBy(discoveryRunsTable.source);
+
+  const candidateCounts = await db.select({
+    source: leadCandidatesTable.source,
+    count: count(),
+  }).from(leadCandidatesTable)
+    .groupBy(leadCandidatesTable.source);
+
+  const candidateCountMap = new Map(candidateCounts.map((c) => [c.source, c.count]));
+  const allSources = new Set([...runStats.map((r) => r.source), ...candidateCounts.map((c) => c.source)]);
+
+  const sources = [...allSources].sort().map((source) => {
+    const run = runStats.find((r) => r.source === source);
+    return {
+      source,
+      runCount: run?.runCount ?? 0,
+      totalFound: run ? Number(run.totalFound) : 0,
+      totalAdded: run ? Number(run.totalAdded) : 0,
+      lastRunAt: run?.lastRunAt ?? null,
+      lastStatus: run?.lastStatus ?? null,
+      totalCandidates: candidateCountMap.get(source) ?? 0,
+    };
+  });
+
+  res.json({ sources });
+});
+
 // ─── GET /api/admin-panel/lead-discovery/isp-groups ──────────────────────────
 // Kalifikasyonu geçmiş lead'leri normalize edilmiş ISP adına göre gruplar
 router.get("/admin-panel/lead-discovery/isp-groups", requireAdmin, async (_req: Request, res: Response) => {
