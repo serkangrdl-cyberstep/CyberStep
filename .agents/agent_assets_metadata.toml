@@ -282,3 +282,27 @@ id = "OkKafkVi6p6OcwW0p0vCN"
 uri = "file://exports/gaosb_osb_firmalari.csv"
 type = "table"
 title = "GAOSB (Gaziantep OSB) Firma Listesi (1505 kayıt)"
+
+[[outputs]]
+id = "hWWhrtv0ChKUa6OsfH3Ow"
+uri = "file://exports/antalyaosb_firmalari.csv"
+type = "table"
+title = "Antalya OSB Firmaları (455 kayıt)"
+
+[[outputs]]
+id = "iResT7r3rP9LvqW_OFS90"
+uri = "file://exports/kos_konya_osb_firmalari.csv"
+type = "table"
+title = "Konya OSB Firmaları (1089 kayıt)"
+
+[[outputs]]
+id = "GBB5D5xkpLSwr6zA3PSsO"
+uri = "file://exports/adana_osb_firmalari.csv"
+type = "table"
+title = "Adana OSB Firmaları (450 kayıt)"
+
+[[outputs]]
+id = "9IqMj_0SvbJKfwns8tGVA"
+uri = "file://exports/iaosb_izmir_ataturk_osb_firmalari.csv"
+type = "table"
+title = "İAOSB İzmir Atatürk OSB Firmaları (985 kayıt)"
