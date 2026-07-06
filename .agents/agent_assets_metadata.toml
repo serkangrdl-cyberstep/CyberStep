@@ -252,3 +252,9 @@ id = "bk1yMdwtiThAKnglhSEnS"
 uri = "file://exports/immib_jtr_uye_firmalar_website_olanlar.csv"
 type = "table"
 title = "JTR - Websitesi Olanlar"
+
+[[outputs]]
+id = "WyZj4PDilDkfjhOSlv9Hs"
+uri = "file://exports/yok_universite_domainleri.xlsx"
+type = "table"
+title = "YÖK Üniversite Domain Listesi"
