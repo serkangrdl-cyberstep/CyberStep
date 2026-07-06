@@ -299,7 +299,7 @@ title = "Konya OSB Firmaları (1089 kayıt)"
 id = "GBB5D5xkpLSwr6zA3PSsO"
 uri = "file://exports/adana_osb_firmalari.csv"
 type = "table"
-title = "Adana OSB Firmaları (450 kayıt)"
+title = "Adana OSB Firmaları - Tüm Kayıtlar (450, web/telefon/domain dahil)"
 
 [[outputs]]
 id = "9IqMj_0SvbJKfwns8tGVA"
@@ -312,3 +312,9 @@ id = "CWwTAM9B32htlAMFGJ_Nt"
 uri = "file://exports/gaosb_osb_firmalari_domain_olanlar.csv"
 type = "table"
 title = "GAOSB Firmaları - Domain Olanlar (1374)"
+
+[[outputs]]
+id = "KqQ-Qw_BDCdODoSwEpCSb"
+uri = "file://exports/adana_osb_firmalari_domain_olanlar.csv"
+type = "table"
+title = "Adana OSB Firmaları - Domain Olanlar (363)"
