@@ -10,8 +10,8 @@ import { db } from "@workspace/db";
 import { logger } from "../../lib/logger";
 import { enrichDomain, normalizeCity } from "./haiku-enrichment";
 
-const BATCH_SIZE = 500;
-const DELAY_MS = 200; // 5 istek/sn rate limit
+const BATCH_SIZE = 2000;
+const DELAY_MS = 150; // ~6.5 istek/sn — Haiku rate limit güvenli aralığı
 
 function sleep(ms: number) {
   return new Promise<void>(resolve => setTimeout(resolve, ms));

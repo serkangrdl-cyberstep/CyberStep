@@ -13,7 +13,7 @@ import { db } from "@workspace/db";
 import { logger } from "../lib/logger";
 
 // ─── Sabitler ────────────────────────────────────────────────────────────────
-const BATCH_LIMIT = 500;
+const BATCH_LIMIT = 5000;
 
 // ─── Sektör keyword haritası ─────────────────────────────────────────────────
 const SECTOR_KEYWORDS: Record<string, string[]> = {

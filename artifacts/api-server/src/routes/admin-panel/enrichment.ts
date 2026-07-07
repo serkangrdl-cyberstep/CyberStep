@@ -214,32 +214,69 @@ router.get("/admin-panel/enrichment/dashboard", requireAdmin, async (_req: Reque
 
 // ─── POST /api/admin-panel/enrichment/normalize-cities ───────────────────────
 // Mevcut DB'deki non-canonical şehir adlarını düzeltir (Istanbul→İstanbul vb.)
+// CITY_ALIASES map'inden otomatik olarak tüm alias → canonical eşlemelerini uygular.
 router.post("/admin-panel/enrichment/normalize-cities", requireAdmin, async (_req: Request, res: Response) => {
   try {
-    const aliases: Array<[string, string]> = [
-      ["Istanbul", "İstanbul"], ["Istambul", "İstanbul"], ["ISTANBUL", "İstanbul"],
-      ["Izmir", "İzmir"], ["IZMIR", "İzmir"], ["Izmır", "İzmir"],
-      ["Sanliurfa", "Şanlıurfa"], ["Şanliurfa", "Şanlıurfa"], ["Urfa", "Şanlıurfa"],
-      ["Diyarbakir", "Diyarbakır"], ["DIYARBAKIR", "Diyarbakır"],
-      ["Eskisehir", "Eskişehir"], ["ESKISEHIR", "Eskişehir"],
-      ["Balikesir", "Balıkesir"], ["BALIKESIR", "Balıkesir"],
-      ["Trabzon", "Trabzon"], ["Samsun", "Samsun"],
-    ];
+    const { CITY_ALIASES } = await import("../../services/enrichment/haiku-enrichment");
+
+    // Canonical değerleri grupla: canonical → [alias1, alias2, ...]
+    const byCanonical = new Map<string, string[]>();
+    for (const [alias, canonical] of Object.entries(CITY_ALIASES)) {
+      if (!canonical) continue; // null = skip (belirsiz yerler)
+      if (alias === canonical.toLowerCase()) continue; // zaten doğru
+      const list = byCanonical.get(canonical) ?? [];
+      list.push(alias);
+      byCanonical.set(canonical, list);
+    }
 
     let totalUpdated = 0;
     const details: Array<{ from: string; to: string; count: number }> = [];
 
-    for (const [from, to] of aliases) {
-      const result = await db.execute<{ id: number }>(sql`
+    for (const [canonical, aliases] of byCanonical.entries()) {
+      // Hem exact alias hem de orijinal yazım varyantlarını kapsa
+      // (alias listesi lowercase — DB'de her case var olabilir)
+      // SQL: WHERE LOWER(city) = ANY(ARRAY[...])
+      const result = await db.execute<{ id: number; old_city: string }>(sql`
         UPDATE lead_candidates
-        SET city = ${to}
-        WHERE city = ${from}
-        RETURNING id
+        SET city = ${canonical},
+            region = (SELECT region FROM (VALUES
+              ('İstanbul','Marmara'),('Ankara','İç Anadolu'),('İzmir','Ege'),
+              ('Bursa','Marmara'),('Antalya','Akdeniz'),('Adana','Akdeniz'),
+              ('Konya','Akdeniz'),('Gaziantep','Güneydoğu Anadolu'),('Kayseri','İç Anadolu'),
+              ('Mersin','Akdeniz'),('Eskişehir','Marmara'),('Diyarbakır','Güneydoğu Anadolu'),
+              ('Samsun','Karadeniz'),('Trabzon','Karadeniz'),('Kocaeli','Marmara'),
+              ('Manisa','Ege'),('Denizli','Ege'),('Şanlıurfa','Güneydoğu Anadolu'),
+              ('Malatya','Doğu Anadolu'),('Balıkesir','Marmara'),
+              ('Adıyaman','Güneydoğu Anadolu'),('Afyonkarahisar','Ege'),('Ağrı','Doğu Anadolu'),
+              ('Amasya','Karadeniz'),('Artvin','Karadeniz'),('Aydın','Ege'),
+              ('Bilecik','Marmara'),('Bingöl','Doğu Anadolu'),('Bitlis','Doğu Anadolu'),
+              ('Bolu','Marmara'),('Burdur','Akdeniz'),('Çanakkale','Marmara'),
+              ('Çankırı','İç Anadolu'),('Çorum','Karadeniz'),('Diyarbakır','Güneydoğu Anadolu'),
+              ('Düzce','Marmara'),('Edirne','Marmara'),('Elazığ','Doğu Anadolu'),
+              ('Erzincan','Doğu Anadolu'),('Erzurum','Doğu Anadolu'),
+              ('Giresun','Karadeniz'),('Gümüşhane','Karadeniz'),('Hakkari','Güneydoğu Anadolu'),
+              ('Hatay','Akdeniz'),('Iğdır','Doğu Anadolu'),('Isparta','Akdeniz'),
+              ('Kahramanmaraş','Akdeniz'),('Karabük','Karadeniz'),('Karaman','Akdeniz'),
+              ('Kars','Doğu Anadolu'),('Kastamonu','Karadeniz'),
+              ('Kırıkkale','İç Anadolu'),('Kırklareli','Marmara'),('Kırşehir','İç Anadolu'),
+              ('Kilis','Güneydoğu Anadolu'),('Kütahya','Ege'),
+              ('Mardin','Güneydoğu Anadolu'),('Muğla','Ege'),('Muş','Doğu Anadolu'),
+              ('Nevşehir','İç Anadolu'),('Niğde','İç Anadolu'),('Ordu','Karadeniz'),
+              ('Osmaniye','Akdeniz'),('Rize','Karadeniz'),('Sakarya','Marmara'),
+              ('Siirt','Güneydoğu Anadolu'),('Sinop','Karadeniz'),('Sivas','İç Anadolu'),
+              ('Şırnak','Güneydoğu Anadolu'),('Tekirdağ','Marmara'),('Tokat','Karadeniz'),
+              ('Tunceli','Doğu Anadolu'),('Uşak','Ege'),('Van','Doğu Anadolu'),
+              ('Yalova','Marmara'),('Yozgat','İç Anadolu'),('Zonguldak','Karadeniz')
+            ) AS t(city_name, region_name)
+            WHERE city_name = ${canonical})
+        WHERE LOWER(REPLACE(city, u&'\0307', '')) = ANY(${aliases}::text[])
+          AND city != ${canonical}
+        RETURNING id, city AS old_city
       `);
       const count = result.rows.length;
       if (count > 0) {
         totalUpdated += count;
-        details.push({ from, to, count });
+        details.push({ from: aliases.join(", "), to: canonical, count });
       }
     }
 
