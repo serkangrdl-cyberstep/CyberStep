@@ -330,3 +330,9 @@ id = "aRWkie37RuXq37YS8dWyp"
 uri = "file://exports/turkiye_dernek_firmalar.csv"
 type = "table"
 title = "turkiye_dernek_firmalar.csv (4997 satır, 1335 unique domain)"
+
+[[outputs]]
+id = "aQloeQSEvJ1jyu0XmCgKC"
+uri = "file://exports/tsoft_referanslar.csv"
+type = "table"
+title = "tsoft_referanslar.csv (435 firma, 435 unique domain, 41 kategori)"
