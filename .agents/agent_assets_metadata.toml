@@ -336,3 +336,9 @@ id = "aQloeQSEvJ1jyu0XmCgKC"
 uri = "file://exports/tsoft_referanslar.csv"
 type = "table"
 title = "tsoft_referanslar.csv (435 firma, 435 unique domain, 41 kategori)"
+
+[[outputs]]
+id = "ykbpuBC33ft4QPhKmvs4g"
+uri = "file://exports/ideasoft_referanslar.csv"
+type = "table"
+title = "ideasoft_referanslar.csv (380 firma, 42 kategori)"
