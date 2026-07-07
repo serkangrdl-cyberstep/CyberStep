@@ -1044,6 +1044,9 @@ importers:
       pg:
         specifier: ^8.20.0
         version: 8.20.0
+      xlsx:
+        specifier: ^0.18.5
+        version: 0.18.5
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

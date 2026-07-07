@@ -324,3 +324,9 @@ id = "hhsU5dhy9kKSZVPfeUArg"
 uri = "file://exports/turkiye_teknopark_firmalari.csv"
 type = "table"
 title = "Türkiye Teknopark Firmaları (1055 firma, 6 teknopark)"
+
+[[outputs]]
+id = "aRWkie37RuXq37YS8dWyp"
+uri = "file://exports/turkiye_dernek_firmalar.csv"
+type = "table"
+title = "Türkiye Dernek Firmaları (4525 satır)"
