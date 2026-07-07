@@ -318,3 +318,9 @@ id = "KqQ-Qw_BDCdODoSwEpCSb"
 uri = "file://exports/adana_osb_firmalari_domain_olanlar.csv"
 type = "table"
 title = "Adana OSB Firmaları - Domain Olanlar (363)"
+
+[[outputs]]
+id = "hhsU5dhy9kKSZVPfeUArg"
+uri = "file://exports/turkiye_teknopark_firmalari.csv"
+type = "table"
+title = "Türkiye Teknopark Firmaları (1055 firma, 6 teknopark)"
