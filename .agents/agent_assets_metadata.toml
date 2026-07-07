@@ -329,16 +329,28 @@ title = "Türkiye Teknopark Firmaları (1055 firma, 6 teknopark)"
 id = "aRWkie37RuXq37YS8dWyp"
 uri = "file://exports/turkiye_dernek_firmalar.csv"
 type = "table"
-title = "turkiye_dernek_firmalar.csv (4997 satır, 1335 unique domain)"
+title = "turkiye_dernek_firmalar.csv (4997 satır)"
 
 [[outputs]]
 id = "aQloeQSEvJ1jyu0XmCgKC"
 uri = "file://exports/tsoft_referanslar.csv"
 type = "table"
-title = "tsoft_referanslar.csv (435 firma, 435 unique domain, 41 kategori)"
+title = "tsoft_referanslar.csv (435 firma)"
 
 [[outputs]]
 id = "ykbpuBC33ft4QPhKmvs4g"
 uri = "file://exports/ideasoft_referanslar.csv"
 type = "table"
-title = "ideasoft_referanslar.csv (380 firma, 42 kategori)"
+title = "ideasoft_referanslar.csv (380 firma)"
+
+[[outputs]]
+id = "8nKuTrqHbHiOQzqI3Q9cV"
+uri = "file://exports/faprika_referanslar.csv"
+type = "table"
+title = "faprika_referanslar.csv (88 firma)"
+
+[[outputs]]
+id = "W55lBIXlzP0HWIIPCoYdr"
+uri = "file://exports/softtr_referanslar.csv"
+type = "table"
+title = "softtr_referanslar.csv (62 firma)"
