@@ -2279,6 +2279,49 @@ router.get("/admin-panel/bist-analysis", requireAdmin, async (req: Request, res:
       };
     });
 
+    // --- Kritik CVE'li BIST şirketleri (drill-down için) ---
+    type CritSrRow = SrRow & { cve_summary_raw?: string; is_bist30?: string; is_bist100?: string; is_bist500?: string };
+    const criticalCveResult = await db.execute<CritSrRow>(sql`
+      SELECT
+        lc.ticker,
+        COALESCE(lc.company_name, lc.scraped_company_name) AS company_name,
+        lc.domain,
+        lc.sector,
+        lc.bist_market,
+        lc.is_bist30::text AS is_bist30,
+        lc.is_bist100::text AS is_bist100,
+        lc.is_bist500::text AS is_bist500,
+        COALESCE(ds.critical_cve_count,0)::text AS critical_cve_count,
+        ds.cve_summary::text AS cve_summary_raw
+      FROM lead_candidates lc
+      LEFT JOIN domain_scans ds ON ds.id = lc.scan_id
+      WHERE lc.is_public_company = true AND COALESCE(ds.critical_cve_count,0) > 0
+      ORDER BY ds.critical_cve_count DESC
+    `);
+    type CveItem2 = { service: string; cveId: string; description: string; cvssScore: number };
+    const critical_cve_companies = (criticalCveResult.rows ?? []).map((r: CritSrRow) => {
+      let cve_list: CveItem2[] = [];
+      try {
+        const raw: CveItem2[] = r.cve_summary_raw ? JSON.parse(r.cve_summary_raw) : [];
+        cve_list = raw.filter(c => c.cvssScore >= 9.0).sort((a, b) => (b.cvssScore ?? 0) - (a.cvssScore ?? 0));
+        if (cve_list.length === 0) {
+          cve_list = raw.filter(c => c.cvssScore >= 7.0).sort((a, b) => (b.cvssScore ?? 0) - (a.cvssScore ?? 0));
+        }
+      } catch { /* ignore */ }
+      return {
+        ticker:             String(r.ticker ?? ""),
+        company_name:       String(r.company_name ?? ""),
+        domain:             String(r.domain ?? ""),
+        sector:             String(r.sector ?? ""),
+        market:             String(r.bist_market ?? ""),
+        is_bist30:          r.is_bist30 === "true",
+        is_bist100:         r.is_bist100 === "true",
+        is_bist500:         r.is_bist500 === "true",
+        critical_cve_count: parseInt(r.critical_cve_count ?? "0"),
+        cve_list,
+      };
+    });
+
     // --- LinkedIn içerik kartları ---
     const highRiskSectors = by_sector.filter(s => s.risk_level === "Yüksek").slice(0, 3);
     const linkedin_cards = [
@@ -2325,6 +2368,7 @@ router.get("/admin-panel/bist-analysis", requireAdmin, async (req: Request, res:
       by_sector,
       by_market,
       top_risk_companies,
+      critical_cve_companies,
       linkedin_cards,
     });
   } catch (err) {

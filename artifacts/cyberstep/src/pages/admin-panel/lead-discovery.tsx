@@ -926,6 +926,56 @@ function IspGroupsView() {
   );
 }
 
+type _BistCveItem = { service: string; cveId: string; description: string; cvssScore: number };
+type _BistCveCo = { ticker: string; company_name: string; domain: string; sector: string; market: string; is_bist30: boolean; is_bist100: boolean; is_bist500: boolean; critical_cve_count: number; cve_list: _BistCveItem[] };
+
+function BistDrillRow({ co }: { co: _BistCveCo }) {
+  const [open, setOpen] = useState(false);
+  const indexes = [co.is_bist30 && "BIST 30", co.is_bist100 && "BIST 100", co.is_bist500 && "BIST 500"].filter(Boolean).join(", ");
+  return (
+    <div className="border rounded-lg overflow-hidden">
+      <button
+        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left hover:bg-muted/40 transition-colors"
+        onClick={() => setOpen(o => !o)}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          {co.ticker && <span className="font-mono text-xs font-bold text-primary shrink-0">{co.ticker}</span>}
+          <span className="text-xs font-medium truncate">{co.company_name || co.domain}</span>
+          <span className="text-[10px] text-muted-foreground truncate hidden sm:block">{co.domain}</span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {indexes && <span className="text-[10px] text-muted-foreground">{indexes}</span>}
+          <span className="text-[10px] bg-red-600/20 text-red-400 border border-red-600/30 rounded px-1.5 py-0.5">{co.critical_cve_count} kritik</span>
+          {open ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+        </div>
+      </button>
+      {open && (
+        <div className="border-t bg-muted/20 px-3 py-2 space-y-2">
+          {co.cve_list.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-1">CVE detayı yüklenemedi — tarama verisi eksik olabilir</p>
+          ) : co.cve_list.map(cve => (
+            <div key={cve.cveId} className="flex items-start justify-between gap-3 text-xs">
+              <div className="min-w-0 space-y-0.5">
+                <a
+                  href={`https://www.cve.org/CVERecord?id=${cve.cveId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono font-bold text-cyan-400 hover:underline"
+                >
+                  {cve.cveId}
+                </a>
+                {cve.service && <div className="text-[10px] text-muted-foreground">Servis: {cve.service}</div>}
+                {cve.description && <p className="text-muted-foreground line-clamp-2">{cve.description}</p>}
+              </div>
+              <span className="font-bold text-red-400 shrink-0">CVSS {cve.cvssScore?.toFixed(1)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminLeadDiscovery() {
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -994,6 +1044,7 @@ export default function AdminLeadDiscovery() {
   const [bistRetagLoading, setBistRetagLoading] = useState(false);
   const [bistRetagResult, setBistRetagResult] = useState<{ updated: number; notFound: string[] } | null>(null);
   const [bistCveCompany, setBistCveCompany] = useState<BistTopRow | null>(null);
+  const [bistDrillFilter, setBistDrillFilter] = useState<"all" | "bist30" | "bist100" | "bist500" | null>(null);
 
   // ─── CVE Raporu tab ───────────────────────────────────────────────────────
   const [cveMinCvss, setCveMinCvss] = useState("0.0");
@@ -1134,6 +1185,7 @@ export default function AdminLeadDiscovery() {
   type BistMarketRow = { market: string; total: number; avg_ai_score: number; with_critical_cve: number };
   type BistCveItem = { service: string; cveId: string; description: string; cvssScore: number };
   type BistTopRow = { ticker: string; company_name: string; domain: string; sector: string; market: string; ai_score: number; critical_cve_count: number; open_ports_count: number; risk_level: string; cve_list?: BistCveItem[] };
+  type BistCveCo = { ticker: string; company_name: string; domain: string; sector: string; market: string; is_bist30: boolean; is_bist100: boolean; is_bist500: boolean; critical_cve_count: number; cve_list: BistCveItem[] };
   type BistCard = { id: string; theme: string; title: string; stats: { label: string; value: string }[] };
   type BistAnalysis = {
     generated_at: string;
@@ -1142,6 +1194,7 @@ export default function AdminLeadDiscovery() {
     by_sector: BistSectorRow[];
     by_market: BistMarketRow[];
     top_risk_companies: BistTopRow[];
+    critical_cve_companies: BistCveCo[];
     linkedin_cards: BistCard[];
   };
   const { data: bistAnalysis, isLoading: bistLoading, refetch: bistRefetch, isFetching: bistFetching } = useQuery<BistAnalysis>({
@@ -4600,16 +4653,21 @@ export default function AdminLeadDiscovery() {
                 {/* Özet kartları */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {[
-                    { label: "Toplam BIST Şirketi", value: bistAnalysis.summary.total_bist_companies, sub: null },
-                    { label: "Domain Bulunan", value: bistAnalysis.summary.with_domain, sub: `%${bistAnalysis.summary.with_domain_pct}` },
-                    { label: "CVE Tespit Edilen", value: bistAnalysis.summary.with_cve, sub: `%${bistAnalysis.summary.with_cve_pct}` },
-                    { label: "Kritik CVE Bulunan", value: bistAnalysis.summary.with_critical_cve, sub: null },
+                    { label: "Toplam BIST Şirketi", value: bistAnalysis.summary.total_bist_companies, sub: null, drill: null as null | "all" },
+                    { label: "Domain Bulunan", value: bistAnalysis.summary.with_domain, sub: `%${bistAnalysis.summary.with_domain_pct}`, drill: null },
+                    { label: "CVE Tespit Edilen", value: bistAnalysis.summary.with_cve, sub: `%${bistAnalysis.summary.with_cve_pct}`, drill: null },
+                    { label: "Kritik CVE Bulunan", value: bistAnalysis.summary.with_critical_cve, sub: null, drill: "all" as const },
                   ].map(card => (
-                    <Card key={card.label}>
+                    <Card
+                      key={card.label}
+                      className={card.drill ? "cursor-pointer hover:border-primary/50 transition-colors" : ""}
+                      onClick={() => card.drill ? setBistDrillFilter(card.drill) : undefined}
+                    >
                       <CardContent className="pt-4 pb-3">
                         <div className="text-xs text-muted-foreground mb-1">{card.label}</div>
-                        <div className="text-2xl font-bold">{card.value}</div>
+                        <div className={`text-2xl font-bold ${card.drill && card.value > 0 ? "text-destructive" : ""}`}>{card.value}</div>
                         {card.sub && <div className="text-xs text-muted-foreground mt-0.5">{card.sub} oranında</div>}
+                        {card.drill && card.value > 0 && <div className="text-[10px] text-primary mt-1">Detay için tıkla</div>}
                       </CardContent>
                     </Card>
                   ))}
@@ -4640,7 +4698,17 @@ export default function AdminLeadDiscovery() {
                               <TableCell className="font-medium">{label}</TableCell>
                               <TableCell className="text-right">{row.total}</TableCell>
                               <TableCell className="text-right">{row.with_cve}</TableCell>
-                              <TableCell className="text-right">{row.critical_cve_count > 0 ? <Badge variant="destructive">{row.critical_cve_count}</Badge> : "—"}</TableCell>
+                              <TableCell className="text-right">
+                                {row.critical_cve_count > 0 ? (
+                                  <button
+                                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                                    onClick={() => setBistDrillFilter(key)}
+                                    title="CVE detaylarını gör"
+                                  >
+                                    <Badge variant="destructive">{row.critical_cve_count}</Badge>
+                                  </button>
+                                ) : "—"}
+                              </TableCell>
                               <TableCell className="text-right">{row.avg_ai_score > 0 ? row.avg_ai_score.toFixed(1) : "—"}</TableCell>
                             </TableRow>
                           );
@@ -4823,6 +4891,43 @@ export default function AdminLeadDiscovery() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* BIST CVE Drilldown Dialog — hangi şirketlerde kritik CVE var */}
+      {!!bistDrillFilter && bistAnalysis && (
+        <Dialog open={!!bistDrillFilter} onOpenChange={() => setBistDrillFilter(null)}>
+          <DialogContent className="max-w-2xl w-[95vw] max-h-[85dvh] overflow-hidden flex flex-col">
+            <DialogHeader className="shrink-0">
+              <DialogTitle className="text-sm">
+                {bistDrillFilter === "all" ? "Tüm BIST" : bistDrillFilter === "bist30" ? "BIST 30" : bistDrillFilter === "bist100" ? "BIST 100" : "BIST 500"}
+                {" "}— Kritik CVE Bulunan Şirketler
+              </DialogTitle>
+              <p className="text-xs text-muted-foreground">Her şirkete tıklayarak CVE listesini genişletin</p>
+            </DialogHeader>
+            <div className="overflow-y-auto flex-1">
+              {(() => {
+                const companies = (bistAnalysis.critical_cve_companies ?? []).filter(c =>
+                  bistDrillFilter === "all" ? true :
+                  bistDrillFilter === "bist30" ? c.is_bist30 :
+                  bistDrillFilter === "bist100" ? c.is_bist100 : c.is_bist500
+                );
+                if (companies.length === 0) return (
+                  <p className="text-xs text-muted-foreground py-8 text-center">Bu filtre için kritik CVE bulunan şirket yok</p>
+                );
+                return (
+                  <div className="space-y-2">
+                    {companies.map((co, idx) => (
+                      <BistDrillRow key={idx} co={co} />
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+            <div className="shrink-0 pt-2 border-t flex justify-end">
+              <button className="text-xs border border-input rounded px-3 py-1.5 hover:bg-accent" onClick={() => setBistDrillFilter(null)}>Kapat</button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* BIST CVE Detay Dialog */}
       {!!bistCveCompany && (
