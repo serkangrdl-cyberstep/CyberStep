@@ -2257,13 +2257,23 @@ router.get("/admin-panel/bist-analysis", requireAdmin, async (req: Request, res:
       ORDER BY lc.risk_score ASC
       LIMIT 20
     `);
-    type CveItem = { service: string; cveId: string; description: string; cvssScore: number };
+    type CveItem = { service: string; cveId: string; description: string; cvssScore: number; adjustedCvssScore?: number; wafMitigated?: boolean };
+    function filterBistCves(raw: CveItem[]): CveItem[] {
+      return raw
+        .filter(c => {
+          const year = parseInt((c.cveId ?? "").split("-")[1] ?? "0");
+          if (year < 2018) return false;
+          const effectiveScore = c.adjustedCvssScore ?? c.cvssScore;
+          return effectiveScore >= 9.0;
+        })
+        .sort((a, b) => ((b.adjustedCvssScore ?? b.cvssScore) - (a.adjustedCvssScore ?? a.cvssScore)));
+    }
     const top_risk_companies = (topRiskResult.rows ?? []).map((r: TopRiskSrRow) => {
       const aiScore = parseInt(r.ai_score ?? "0");
       let cve_list: CveItem[] = [];
       try {
         const raw: CveItem[] = r.cve_summary_raw ? JSON.parse(r.cve_summary_raw) : [];
-        cve_list = raw.filter(c => c.cvssScore >= 9.0).sort((a, b) => (b.cvssScore ?? 0) - (a.cvssScore ?? 0));
+        cve_list = filterBistCves(raw);
       } catch { /* ignore parse errors */ }
       return {
         ticker:             String(r.ticker ?? ""),
@@ -2298,15 +2308,11 @@ router.get("/admin-panel/bist-analysis", requireAdmin, async (req: Request, res:
       WHERE lc.is_public_company = true AND COALESCE(ds.critical_cve_count,0) > 0
       ORDER BY ds.critical_cve_count DESC
     `);
-    type CveItem2 = { service: string; cveId: string; description: string; cvssScore: number };
     const critical_cve_companies = (criticalCveResult.rows ?? []).map((r: CritSrRow) => {
-      let cve_list: CveItem2[] = [];
+      let cve_list: CveItem[] = [];
       try {
-        const raw: CveItem2[] = r.cve_summary_raw ? JSON.parse(r.cve_summary_raw) : [];
-        cve_list = raw.filter(c => c.cvssScore >= 9.0).sort((a, b) => (b.cvssScore ?? 0) - (a.cvssScore ?? 0));
-        if (cve_list.length === 0) {
-          cve_list = raw.filter(c => c.cvssScore >= 7.0).sort((a, b) => (b.cvssScore ?? 0) - (a.cvssScore ?? 0));
-        }
+        const raw: CveItem[] = r.cve_summary_raw ? JSON.parse(r.cve_summary_raw) : [];
+        cve_list = filterBistCves(raw);
       } catch { /* ignore */ }
       return {
         ticker:             String(r.ticker ?? ""),
