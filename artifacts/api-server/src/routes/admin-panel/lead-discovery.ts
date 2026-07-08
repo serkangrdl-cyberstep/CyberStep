@@ -2239,7 +2239,8 @@ router.get("/admin-panel/bist-analysis", requireAdmin, async (req: Request, res:
     }));
 
     // --- En riskli şirketler (düşük skor = yüksek risk) ---
-    const topRiskResult = await db.execute<SrRow>(sql`
+    type TopRiskSrRow = SrRow & { cve_summary_raw?: string };
+    const topRiskResult = await db.execute<TopRiskSrRow>(sql`
       SELECT
         lc.ticker,
         COALESCE(lc.company_name, lc.scraped_company_name) AS company_name,
@@ -2248,15 +2249,22 @@ router.get("/admin-panel/bist-analysis", requireAdmin, async (req: Request, res:
         lc.bist_market,
         lc.risk_score::text AS ai_score,
         COALESCE(ds.critical_cve_count,0)::text AS critical_cve_count,
-        COALESCE(ds.open_ports_count,0)::text AS open_ports_count
+        COALESCE(ds.open_ports_count,0)::text AS open_ports_count,
+        ds.cve_summary::text AS cve_summary_raw
       FROM lead_candidates lc
       LEFT JOIN domain_scans ds ON ds.id = lc.scan_id
       WHERE lc.is_public_company = true AND lc.risk_score IS NOT NULL
       ORDER BY lc.risk_score ASC
       LIMIT 20
     `);
-    const top_risk_companies = (topRiskResult.rows ?? []).map((r: SrRow) => {
+    type CveItem = { service: string; cveId: string; description: string; cvssScore: number };
+    const top_risk_companies = (topRiskResult.rows ?? []).map((r: TopRiskSrRow) => {
       const aiScore = parseInt(r.ai_score ?? "0");
+      let cve_list: CveItem[] = [];
+      try {
+        const raw: CveItem[] = r.cve_summary_raw ? JSON.parse(r.cve_summary_raw) : [];
+        cve_list = raw.filter(c => c.cvssScore >= 9.0).sort((a, b) => (b.cvssScore ?? 0) - (a.cvssScore ?? 0));
+      } catch { /* ignore parse errors */ }
       return {
         ticker:             String(r.ticker ?? ""),
         company_name:       String(r.company_name ?? ""),
@@ -2267,6 +2275,7 @@ router.get("/admin-panel/bist-analysis", requireAdmin, async (req: Request, res:
         critical_cve_count: parseInt(r.critical_cve_count ?? "0"),
         open_ports_count:   parseInt(r.open_ports_count ?? "0"),
         risk_level:         aiScore < 30 ? "Yüksek" : aiScore < 60 ? "Orta" : "Düşük",
+        cve_list,
       };
     });
 

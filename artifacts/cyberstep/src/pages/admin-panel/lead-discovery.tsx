@@ -993,6 +993,7 @@ export default function AdminLeadDiscovery() {
   const [bistRetagInput, setBistRetagInput] = useState("");
   const [bistRetagLoading, setBistRetagLoading] = useState(false);
   const [bistRetagResult, setBistRetagResult] = useState<{ updated: number; notFound: string[] } | null>(null);
+  const [bistCveCompany, setBistCveCompany] = useState<BistTopRow | null>(null);
 
   // ─── CVE Raporu tab ───────────────────────────────────────────────────────
   const [cveMinCvss, setCveMinCvss] = useState("0.0");
@@ -1131,7 +1132,8 @@ export default function AdminLeadDiscovery() {
   type BistIndexStat = { total: number; with_cve: number; avg_ai_score: number; critical_cve_count: number };
   type BistSectorRow = { sector: string; total: number; with_cve: number; critical_cve_count: number; avg_open_ports: number; avg_ai_score: number; risk_level: string };
   type BistMarketRow = { market: string; total: number; avg_ai_score: number; with_critical_cve: number };
-  type BistTopRow = { ticker: string; company_name: string; domain: string; sector: string; market: string; ai_score: number; critical_cve_count: number; open_ports_count: number; risk_level: string };
+  type BistCveItem = { service: string; cveId: string; description: string; cvssScore: number };
+  type BistTopRow = { ticker: string; company_name: string; domain: string; sector: string; market: string; ai_score: number; critical_cve_count: number; open_ports_count: number; risk_level: string; cve_list?: BistCveItem[] };
   type BistCard = { id: string; theme: string; title: string; stats: { label: string; value: string }[] };
   type BistAnalysis = {
     generated_at: string;
@@ -4753,7 +4755,17 @@ export default function AdminLeadDiscovery() {
                               <TableCell className="text-xs">{c.sector || "—"}</TableCell>
                               <TableCell className="text-xs">{c.market || "—"}</TableCell>
                               <TableCell className="text-right text-xs font-medium">{c.ai_score}</TableCell>
-                              <TableCell className="text-right text-xs">{c.critical_cve_count > 0 ? <Badge variant="destructive">{c.critical_cve_count}</Badge> : "—"}</TableCell>
+                              <TableCell className="text-right text-xs">
+                                {c.critical_cve_count > 0 ? (
+                                  <button
+                                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                                    onClick={() => setBistCveCompany(c)}
+                                    title="CVE detaylarını gör"
+                                  >
+                                    <Badge variant="destructive">{c.critical_cve_count}</Badge>
+                                  </button>
+                                ) : "—"}
+                              </TableCell>
                               <TableCell className="text-right text-xs">{c.open_ports_count > 0 ? c.open_ports_count : "—"}</TableCell>
                               <TableCell>
                                 <Badge className={c.risk_level === "Yüksek" ? "bg-red-600/20 text-red-400 border-red-600/30" : c.risk_level === "Orta" ? "bg-amber-600/20 text-amber-400 border-amber-600/30" : "bg-green-600/20 text-green-400 border-green-600/30"}>
@@ -4811,6 +4823,58 @@ export default function AdminLeadDiscovery() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* BIST CVE Detay Dialog */}
+      {!!bistCveCompany && (
+        <Dialog open={!!bistCveCompany} onOpenChange={() => setBistCveCompany(null)}>
+          <DialogContent className="max-w-lg w-[95vw] max-h-[80dvh] overflow-hidden flex flex-col">
+            <DialogHeader className="shrink-0">
+              <DialogTitle className="text-sm flex items-center gap-2">
+                <span className="font-mono font-bold">{bistCveCompany.ticker || bistCveCompany.company_name}</span>
+                <span className="text-muted-foreground font-normal">— Kritik CVE Listesi</span>
+              </DialogTitle>
+              <p className="text-xs text-muted-foreground">{bistCveCompany.domain}</p>
+            </DialogHeader>
+            <div className="overflow-y-auto flex-1 -mx-1 px-1">
+              {(!bistCveCompany.cve_list || bistCveCompany.cve_list.length === 0) ? (
+                <p className="text-xs text-muted-foreground py-6 text-center">CVE verisi bulunamadı (CVSS ≥ 9.0)</p>
+              ) : (
+                <div className="space-y-2">
+                  {bistCveCompany.cve_list.map(cve => (
+                    <div key={cve.cveId} className="border rounded-lg p-3 bg-muted/20 space-y-1.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <a
+                          href={`https://www.cve.org/CVERecord?id=${cve.cveId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono text-xs font-bold text-cyan-400 hover:underline shrink-0"
+                        >
+                          {cve.cveId}
+                        </a>
+                        <span className="text-xs font-bold text-red-400 shrink-0">CVSS {cve.cvssScore?.toFixed(1)}</span>
+                      </div>
+                      {cve.service && (
+                        <div className="text-[10px] text-muted-foreground">Servis: <span className="text-foreground/70">{cve.service}</span></div>
+                      )}
+                      {cve.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-3">{cve.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="shrink-0 pt-2 border-t flex justify-end">
+              <button
+                className="text-xs border border-input rounded px-3 py-1.5 hover:bg-accent"
+                onClick={() => setBistCveCompany(null)}
+              >
+                Kapat
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Lead Detail Dialog */}
       {!!detailCandidate && (
