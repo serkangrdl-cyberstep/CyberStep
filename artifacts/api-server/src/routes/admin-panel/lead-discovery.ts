@@ -2329,10 +2329,23 @@ router.get("/admin-panel/bist-analysis", requireAdmin, async (req: Request, res:
     }).filter(c => c.cve_list.length > 0);
 
     // Özet ve endeks sayılarını filtrelenmiş veriye göre yeniden hesapla
-    summary.with_critical_cve = critical_cve_companies.length;
+    const filteredCount = critical_cve_companies.length;
+    summary.with_critical_cve = filteredCount;
+    summary.with_cve           = filteredCount;
+    summary.with_cve_pct       = summary.total_bist_companies > 0
+      ? Math.round(filteredCount / summary.total_bist_companies * 100) : 0;
+
     by_index.bist30.critical_cve_count  = critical_cve_companies.filter(c => c.is_bist30).reduce((s, c) => s + c.cve_list.length, 0);
     by_index.bist100.critical_cve_count = critical_cve_companies.filter(c => c.is_bist100).reduce((s, c) => s + c.cve_list.length, 0);
     by_index.bist500.critical_cve_count = critical_cve_companies.filter(c => c.is_bist500).reduce((s, c) => s + c.cve_list.length, 0);
+    by_index.bist30.with_cve  = critical_cve_companies.filter(c => c.is_bist30).length;
+    by_index.bist100.with_cve = critical_cve_companies.filter(c => c.is_bist100).length;
+    by_index.bist500.with_cve = critical_cve_companies.filter(c => c.is_bist500).length;
+
+    // by_market critical_cve sayılarını filtreli veriden yeniden hesapla
+    for (const mkt of by_market) {
+      mkt.with_critical_cve = critical_cve_companies.filter(c => c.market === mkt.market).length;
+    }
 
     // --- LinkedIn içerik kartları ---
     const highRiskSectors = by_sector.filter(s => s.risk_level === "Yüksek").slice(0, 3);
