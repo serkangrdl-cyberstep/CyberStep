@@ -2323,10 +2323,16 @@ router.get("/admin-panel/bist-analysis", requireAdmin, async (req: Request, res:
         is_bist30:          r.is_bist30 === "true",
         is_bist100:         r.is_bist100 === "true",
         is_bist500:         r.is_bist500 === "true",
-        critical_cve_count: parseInt(r.critical_cve_count ?? "0"),
+        critical_cve_count: cve_list.length,
         cve_list,
       };
-    });
+    }).filter(c => c.cve_list.length > 0);
+
+    // Özet ve endeks sayılarını filtrelenmiş veriye göre yeniden hesapla
+    summary.with_critical_cve = critical_cve_companies.length;
+    by_index.bist30.critical_cve_count  = critical_cve_companies.filter(c => c.is_bist30).reduce((s, c) => s + c.cve_list.length, 0);
+    by_index.bist100.critical_cve_count = critical_cve_companies.filter(c => c.is_bist100).reduce((s, c) => s + c.cve_list.length, 0);
+    by_index.bist500.critical_cve_count = critical_cve_companies.filter(c => c.is_bist500).reduce((s, c) => s + c.cve_list.length, 0);
 
     // --- LinkedIn içerik kartları ---
     const highRiskSectors = by_sector.filter(s => s.risk_level === "Yüksek").slice(0, 3);
