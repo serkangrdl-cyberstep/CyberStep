@@ -55,3 +55,4 @@
 - [node-cron missed execution silent drop](node-cron-missed-execution-drop.md) — a "missed execution/blocking IO" warning can permanently stop just that task's future ticks; periodic (not startup-only) DB-driven catch-up sweep self-heals it
 - [Event loop starvation from cron loops](event-loop-starvation-crons.md) — unbounded sync O(N×M) loops in one cron (no await) can silently vanish another unrelated cron's ticks; diagnose via cron_job_runs status='running' age
 - [Python discovery-engine rewrite rejected](discovery-engine-python-rewrite-rejected.md) — FastAPI/Celery/Docker rewrite proposal evaluated & rejected; kept Node/TS; remaining gaps listed
+- [Drizzle large batch insert stack overflow](drizzle-large-batch-insert-stack-overflow.md) — unbounded .values(array) inserts crash with RangeError and starve event loop, cascading cron failures; chunk to ~500 rows

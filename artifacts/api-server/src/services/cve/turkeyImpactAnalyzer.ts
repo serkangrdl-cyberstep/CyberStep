@@ -465,16 +465,20 @@ export async function rematchCveDomains(): Promise<{ newMatches: number; cveCoun
     }
 
     if (toInsert.length > 0) {
-      const result = await db.insert(cveDomainMatchesTable)
-        .values(toInsert)
-        .onConflictDoNothing();
+      // Büyük VALUES listeleri (binlerce satır) drizzle'ın sql merge fonksiyonunda
+      // "Maximum call stack size exceeded" hatası veriyordu — 500'erlik parçalara bölüyoruz.
+      const CHUNK_SIZE = 500;
+      for (let i = 0; i < toInsert.length; i += CHUNK_SIZE) {
+        const chunk = toInsert.slice(i, i + CHUNK_SIZE);
+        await db.insert(cveDomainMatchesTable)
+          .values(chunk)
+          .onConflictDoNothing();
+      }
       totalNew += toInsert.length;
 
       await db.update(cveTrackerTable)
         .set({ trAffectedDomains: sql`(SELECT COUNT(*)::int FROM cve_domain_matches WHERE cve_id = ${cve.cveId})` })
         .where(eq(cveTrackerTable.cveId, cve.cveId));
-
-      void result;
     }
   }
 
