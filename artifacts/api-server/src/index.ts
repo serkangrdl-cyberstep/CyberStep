@@ -3154,13 +3154,13 @@ startup()
     // ─── Haiku Domain Enrichment — Her gece 02:30 Istanbul ───────────────────
     // lead_candidates.enrichment_status='pending' domainleri Claude Haiku ile zenginleştirir.
     // Batch: 500 domain/gece, ~$0.08/gece. Rate limit: 5 istek/sn.
-    cron.schedule("30 2 * * *", wrapCron("haiku_enrichment", "30 2 * * *", async () => {
+    cron.schedule("30 2,8,14,20 * * *", wrapCron("haiku_enrichment", "30 2,8,14,20 * * *", async () => {
       if (!await cronIsEnabled("haiku_enrichment")) { logger.info("Haiku enrichment cron devre dışı, atlanıyor"); return 0; }
       const { runEnrichmentBatch } = await import("./services/enrichment/batch-enrichment");
       const result = await runEnrichmentBatch();
       return result.enriched + result.no_match;
     }), { timezone: "Europe/Istanbul" });
-    logger.info("Haiku enrichment cron scheduled (her gece 02:30 Istanbul)");
+    logger.info("Haiku enrichment cron scheduled (02:30 / 08:30 / 14:30 / 20:30 Istanbul)");
 
     // ─── Blacklist Monitoring — Her gece 03:00 Istanbul ──────────────────────
     // domain_scans'teki domainleri Spamhaus/SURBL/MXToolbox/SafeBrowsing ile kontrol eder.
