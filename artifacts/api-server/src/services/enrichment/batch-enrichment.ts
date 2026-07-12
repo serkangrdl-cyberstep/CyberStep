@@ -10,8 +10,10 @@ import { db } from "@workspace/db";
 import { logger } from "../../lib/logger";
 import { enrichDomain, normalizeCity } from "./haiku-enrichment";
 
-const BATCH_SIZE = 2000;
+const BATCH_SIZE = 500;
 const DELAY_MS = 150; // ~6.5 istek/sn — Haiku rate limit güvenli aralığı
+const DOMAIN_TIMEOUT_MS = 10_000; // tek domain için max 10s (API + DB)
+const BATCH_DEADLINE_MS = 20 * 60 * 1000; // 20 dakika — watchdog eşiği (25dk) altında
 
 function sleep(ms: number) {
   return new Promise<void>(resolve => setTimeout(resolve, ms));
@@ -27,6 +29,7 @@ export interface BatchResult {
 
 export async function runEnrichmentBatch(): Promise<BatchResult> {
   const stats = { processed: 0, enriched: 0, no_match: 0, failed: 0 };
+  const batchStart = Date.now();
 
   const rows = await db.execute<{
     id: number;
@@ -56,6 +59,15 @@ export async function runEnrichmentBatch(): Promise<BatchResult> {
   }
 
   for (const row of candidates) {
+    // Batch duvar saati limiti — watchdog eşiğine (25dk) 5dk kala dur
+    if (Date.now() - batchStart > BATCH_DEADLINE_MS) {
+      logger.warn(
+        { processed: stats.processed, remaining: candidates.length - stats.processed },
+        "Haiku enrichment: 20dk deadline aşıldı, kalan domainler bir sonraki çalışmaya bırakılıyor",
+      );
+      break;
+    }
+
     const now = new Date();
     try {
       await db.execute(sql`
@@ -65,7 +77,12 @@ export async function runEnrichmentBatch(): Promise<BatchResult> {
       `);
 
       const companyName = row.company_name ?? row.scraped_company_name ?? null;
-      const result = await enrichDomain(row.domain, companyName);
+
+      // Her domain için zaman aşımı — tek yavaş çağrı batch'i mahvetmesin
+      const result = await Promise.race([
+        enrichDomain(row.domain, companyName),
+        sleep(DOMAIN_TIMEOUT_MS).then(() => { throw new Error(`timeout: ${row.domain} (${DOMAIN_TIMEOUT_MS}ms)`); }),
+      ]);
 
       const completedAt = new Date();
       await db.execute(sql`
@@ -84,12 +101,16 @@ export async function runEnrichmentBatch(): Promise<BatchResult> {
       else stats.no_match++;
     } catch (err) {
       logger.warn({ domain: row.domain, err }, "Haiku enrichment hatası");
-      await db.execute(sql`
-        UPDATE lead_candidates
-        SET enrichment_status = 'failed',
-            enrichment_attempted_at = ${now}
-        WHERE id = ${row.id}
-      `);
+      try {
+        await db.execute(sql`
+          UPDATE lead_candidates
+          SET enrichment_status = 'failed',
+              enrichment_attempted_at = ${now}
+          WHERE id = ${row.id}
+        `);
+      } catch (dbErr) {
+        logger.warn({ domain: row.domain, dbErr }, "Haiku enrichment: failed güncelleme de başarısız");
+      }
       stats.failed++;
     }
 
