@@ -3178,10 +3178,9 @@ startup()
 
     // ─── Web Contact & Company Intelligence Scraper — Her 15 dakika ─────────
     // lead_candidates'teki is_alive=TRUE domainlerin web sitesini ziyaret eder:
-    // e-posta, telefon, adres, şirket özeti, hizmetler, kuruluş yılı, B2B,
-    // e-ticaret, KVKK sayfası, kariyer sayfası, CMS, sosyal medya linklerini çeker.
+    // e-posta, telefon, adres, kuruluş yılı, B2B, e-ticaret, KVKK/kariyer sayfası,
+    // CMS, sosyal medya linklerini çeker. Tamamen ücretsiz — AI çağrısı yok.
     // Batch: 200 domain/run, concurrency=10 → ~800/saat → 84955 backlog ~4.5 gün.
-    // Sektör bulunursa enrichment_status='enriched' set eder → haiku adımını atlar.
     cron.schedule("*/15 * * * *", wrapCron("web_contact_scraper", "*/15 * * * *", async () => {
       if (!await cronIsEnabled("web_contact_scraper")) { logger.info("Web contact scraper cron devre dışı, atlanıyor"); return 0; }
       const { runWebScrapeBatch } = await import("./services/enrichment/batch-web-scraper");
@@ -3189,18 +3188,6 @@ startup()
       return result.scraped + result.no_data;
     }), { timezone: "Europe/Istanbul" });
     logger.info("Web contact scraper cron scheduled (her 15 dakika, 200 domain/run)");
-
-    // ─── Haiku Domain Enrichment — Her gece 02:30 Istanbul ───────────────────
-    // lead_candidates.enrichment_status='pending' domainleri Claude Haiku ile zenginleştirir.
-    // NOT: web_contact_scraper sektör bulursa haiku bu domain'i otomatik atlar.
-    // Batch: 500 domain/gece, ~$0.08/gece. Rate limit: 5 istek/sn.
-    cron.schedule("30 2,8,14,20 * * *", wrapCron("haiku_enrichment", "30 2,8,14,20 * * *", async () => {
-      if (!await cronIsEnabled("haiku_enrichment")) { logger.info("Haiku enrichment cron devre dışı, atlanıyor"); return 0; }
-      const { runEnrichmentBatch } = await import("./services/enrichment/batch-enrichment");
-      const result = await runEnrichmentBatch();
-      return result.enriched + result.no_match;
-    }), { timezone: "Europe/Istanbul" });
-    logger.info("Haiku enrichment cron scheduled (02:30 / 08:30 / 14:30 / 20:30 Istanbul)");
 
     // ─── Blacklist Monitoring — Her gece 03:00 Istanbul ──────────────────────
     // domain_scans'teki domainleri Spamhaus/SURBL/MXToolbox/SafeBrowsing ile kontrol eder.
@@ -3666,7 +3653,6 @@ startup()
         { name: "ai_quality_monitor",          thresholdHours: 25  },
         { name: "auto_invoice_generate",       thresholdHours: 25  },
         { name: "web_contact_scraper",        thresholdHours: 1   },
-        { name: "haiku_enrichment",         thresholdHours: 25  },
         { name: "blacklist_monitor",          thresholdHours: 25  },
         { name: "ssl_monitor",              thresholdHours: 25  },
         { name: "mail_monitor",             thresholdHours: 25  },
