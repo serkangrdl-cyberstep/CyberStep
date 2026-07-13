@@ -1902,6 +1902,31 @@ async function startup() {
   await ensureLeadCandidatesExtraColumns();
   await ensureWebEnrichColumns();
   await ensureLeadCandidatesTierColumns();
+  // Web scraper yeni sütunları (DB push ile eklendi, fallback guard)
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS web_scrape_status VARCHAR(20)`);
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS web_scrape_email VARCHAR(255)`);
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS web_scrape_source_url VARCHAR(500)`);
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS company_about_summary TEXT`);
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS company_services JSONB`);
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS company_founded_year INTEGER`);
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS is_b2b BOOLEAN`);
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS has_ecommerce BOOLEAN`);
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS has_kvkk_page BOOLEAN`);
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS has_careers_page BOOLEAN`);
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS cms_detected VARCHAR(100)`);
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS social_linkedin_url VARCHAR(500)`);
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS social_instagram_url VARCHAR(500)`);
+  await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_lead_candidates_web_scrape_status ON lead_candidates(web_scrape_status)`);
+  // Startup cleanup: is_alive=FALSE domainleri web scrape kuyruğundan çıkar
+  setImmediate(async () => {
+    try {
+      const { markDeadDomainsNoData } = await import("./services/enrichment/batch-web-scraper");
+      const n = await markDeadDomainsNoData();
+      if (n > 0) logger.info({ n }, "Web scrape: ölü domainler 'no_data' işaretlendi");
+    } catch (err) {
+      logger.warn({ err }, "Web scrape startup cleanup hatası");
+    }
+  });
   await db.execute(sql`ALTER TABLE IF EXISTS domain_scans ADD COLUMN IF NOT EXISTS redirected_to TEXT`);
   await ensureSocialMediaTables();
   await ensureAdminPermissions();
@@ -3151,8 +3176,23 @@ startup()
     }), { timezone: "Europe/Istanbul" });
     logger.info("Sektör enrichment cron scheduled (her 6 saatte bir)");
 
+    // ─── Web Contact & Company Intelligence Scraper — Her 15 dakika ─────────
+    // lead_candidates'teki is_alive=TRUE domainlerin web sitesini ziyaret eder:
+    // e-posta, telefon, adres, şirket özeti, hizmetler, kuruluş yılı, B2B,
+    // e-ticaret, KVKK sayfası, kariyer sayfası, CMS, sosyal medya linklerini çeker.
+    // Batch: 200 domain/run, concurrency=10 → ~800/saat → 84955 backlog ~4.5 gün.
+    // Sektör bulunursa enrichment_status='enriched' set eder → haiku adımını atlar.
+    cron.schedule("*/15 * * * *", wrapCron("web_contact_scraper", "*/15 * * * *", async () => {
+      if (!await cronIsEnabled("web_contact_scraper")) { logger.info("Web contact scraper cron devre dışı, atlanıyor"); return 0; }
+      const { runWebScrapeBatch } = await import("./services/enrichment/batch-web-scraper");
+      const result = await runWebScrapeBatch();
+      return result.scraped + result.no_data;
+    }), { timezone: "Europe/Istanbul" });
+    logger.info("Web contact scraper cron scheduled (her 15 dakika, 200 domain/run)");
+
     // ─── Haiku Domain Enrichment — Her gece 02:30 Istanbul ───────────────────
     // lead_candidates.enrichment_status='pending' domainleri Claude Haiku ile zenginleştirir.
+    // NOT: web_contact_scraper sektör bulursa haiku bu domain'i otomatik atlar.
     // Batch: 500 domain/gece, ~$0.08/gece. Rate limit: 5 istek/sn.
     cron.schedule("30 2,8,14,20 * * *", wrapCron("haiku_enrichment", "30 2,8,14,20 * * *", async () => {
       if (!await cronIsEnabled("haiku_enrichment")) { logger.info("Haiku enrichment cron devre dışı, atlanıyor"); return 0; }
@@ -3625,6 +3665,7 @@ startup()
         { name: "customer_activation_monitor", thresholdHours: 25  },
         { name: "ai_quality_monitor",          thresholdHours: 25  },
         { name: "auto_invoice_generate",       thresholdHours: 25  },
+        { name: "web_contact_scraper",        thresholdHours: 1   },
         { name: "haiku_enrichment",         thresholdHours: 25  },
         { name: "blacklist_monitor",          thresholdHours: 25  },
         { name: "ssl_monitor",              thresholdHours: 25  },

@@ -107,6 +107,23 @@ export const leadCandidatesTable = pgTable("lead_candidates", {
   isBist30: boolean("is_bist30").notNull().default(false),
   isBist100: boolean("is_bist100").notNull().default(false),
   isBist500: boolean("is_bist500").notNull().default(false),
+  // ─── Web Contact & Company Intelligence Scraper ───────────────────────────
+  // null=bekliyor | 'scraping'=işleniyor | 'scraped'=tamamlandı | 'no_data'=veri yok | 'failed'=hata | 'blocked'=WAF/bot engeli
+  webScrapeStatus: varchar("web_scrape_status", { length: 20 }),
+  // web_scraped_at already exists (line 60) — reused as completion timestamp
+  webScrapeEmail: varchar("web_scrape_email", { length: 255 }),
+  webScrapeSourceUrl: varchar("web_scrape_source_url", { length: 500 }),
+  // Şirket Profili
+  companyAboutSummary: text("company_about_summary"),
+  companyServices: jsonb("company_services"),        // string[]
+  companyFoundedYear: integer("company_founded_year"),
+  isB2b: boolean("is_b2b"),
+  hasEcommerce: boolean("has_ecommerce"),
+  hasKvkkPage: boolean("has_kvkk_page"),
+  hasCareersPage: boolean("has_careers_page"),
+  cmsDetected: varchar("cms_detected", { length: 100 }),
+  socialLinkedinUrl: varchar("social_linkedin_url", { length: 500 }),
+  socialInstagramUrl: varchar("social_instagram_url", { length: 500 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [
@@ -114,6 +131,7 @@ export const leadCandidatesTable = pgTable("lead_candidates", {
   index("idx_lead_candidates_qualified").on(t.isQualified),
   index("idx_lead_candidates_tier").on(t.tier),
   index("idx_lead_candidates_isp").on(t.ispOrganization),
+  index("idx_lead_candidates_web_scrape_status").on(t.webScrapeStatus),
 ]);
 
 export const subdomainScoringRulesTable = pgTable("subdomain_scoring_rules", {
