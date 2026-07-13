@@ -124,6 +124,12 @@ export const leadCandidatesTable = pgTable("lead_candidates", {
   cmsDetected: varchar("cms_detected", { length: 100 }),
   socialLinkedinUrl: varchar("social_linkedin_url", { length: 500 }),
   socialInstagramUrl: varchar("social_instagram_url", { length: 500 }),
+  // ─── KVKK / PII Accountability ───────────────────────────────────────────────
+  // 'corporate' | 'personal' | 'unknown'  (web scraper'dan sınıflandırılır)
+  piiClassification: varchar("pii_classification", { length: 20 }).default("unknown"),
+  // Veri sahibi itirazı sonrası PII alanları NULL'lanır, domain/sektör/güvenlik verisi kalır
+  piiAnonymized: boolean("pii_anonymized").default(false),
+  piiAnonymizedAt: timestamp("pii_anonymized_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [
@@ -133,6 +139,37 @@ export const leadCandidatesTable = pgTable("lead_candidates", {
   index("idx_lead_candidates_isp").on(t.ispOrganization),
   index("idx_lead_candidates_web_scrape_status").on(t.webScrapeStatus),
 ]);
+
+// ─── KVKK İşleme Kaydı (Accountability) ──────────────────────────────────────
+// Her PII yakalayan scrape için bir satır yazılır.
+// Yasal dayanak: KVKK m.5/2-f (meşru menfaat) — iş geliştirme amaçlı B2B işleme.
+export const dataProcessingLogTable = pgTable("data_processing_log", {
+  id: serial("id").primaryKey(),
+  leadCandidateId: integer("lead_candidate_id").references(() => leadCandidatesTable.id),
+  domain: varchar("domain", { length: 255 }).notNull(),
+  // Hangi PII alanları yakalandı: { email: true, phone: false, address: true }
+  dataCollected: jsonb("data_collected"),
+  legalBasis: varchar("legal_basis", { length: 60 }).default("legitimate_interest_kvkk_5_2_f"),
+  piiClassification: varchar("pii_classification", { length: 20 }),
+  sourceUrl: varchar("source_url", { length: 500 }),
+  collectedAt: timestamp("collected_at").notNull().defaultNow(),
+}, (t) => [
+  index("idx_data_processing_log_domain").on(t.domain),
+]);
+
+// ─── KVKK İtiraz / Silme Başvuruları ─────────────────────────────────────────
+// Veri sahibi başvurusu: silme/anonimleştirme talepleri kayıt altına alınır.
+export const kvkkObjectionsTable = pgTable("kvkk_objections", {
+  id: serial("id").primaryKey(),
+  identifier: varchar("identifier", { length: 255 }).notNull(), // domain veya e-posta
+  requesterContact: varchar("requester_contact", { length: 255 }),
+  requestType: varchar("request_type", { length: 20 }).default("objection"), // 'objection' | 'deletion'
+  receivedAt: timestamp("received_at").notNull().defaultNow(),
+  processedAt: timestamp("processed_at"),
+  actionTaken: varchar("action_taken", { length: 30 }),     // 'anonymized' | 'rejected' | 'not_found'
+  affectedRowCount: integer("affected_row_count").default(0),
+  notes: text("notes"),
+});
 
 export const subdomainScoringRulesTable = pgTable("subdomain_scoring_rules", {
   id: serial("id").primaryKey(),
@@ -167,3 +204,5 @@ export type DiscoveryRun = typeof discoveryRunsTable.$inferSelect;
 export type LeadCandidate = typeof leadCandidatesTable.$inferSelect;
 export type SubdomainScoringRule = typeof subdomainScoringRulesTable.$inferSelect;
 export type IspPartner = typeof ispPartnersTable.$inferSelect;
+export type DataProcessingLog = typeof dataProcessingLogTable.$inferSelect;
+export type KvkkObjection = typeof kvkkObjectionsTable.$inferSelect;

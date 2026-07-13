@@ -159,6 +159,9 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
               -- Coğrafya: web scrape (ücretsiz regex) > mevcut değer
               city                   = COALESCE(city, ${result.city}),
 
+              -- KVKK PII sınıflandırması
+              pii_classification     = ${result.piiClassification},
+
               -- Sektör: mevcut (Haiku/AI) veri varsa koru, sadece boşları doldur
               sector                 = COALESCE(sector, ${result.sector}),
               sector_confidence      = CASE
@@ -177,6 +180,23 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
 
             WHERE id = ${row.id}
           `);
+          // ─── KVKK accountability log ──────────────────────────────────────
+          // PII yakalanmışsa işleme kaydı yaz (hesap verebilirlik).
+          const hasPii = !!(result.email || result.phone || result.address);
+          if (hasPii) {
+            await db.execute(sql`
+              INSERT INTO data_processing_log
+                (lead_candidate_id, domain, data_collected, pii_classification, source_url)
+              VALUES (
+                ${row.id},
+                ${row.domain},
+                ${JSON.stringify({ email: !!result.email, phone: !!result.phone, address: !!result.address })},
+                ${result.piiClassification},
+                ${result.sourceUrl}
+              )
+            `).catch(() => { /* log kaydı başarısız olsa da scrape verisi korunur */ });
+          }
+
           stats.scraped++;
         }
       } catch (err) {

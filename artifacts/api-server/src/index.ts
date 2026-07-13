@@ -1917,6 +1917,71 @@ async function startup() {
   await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS social_linkedin_url VARCHAR(500)`);
   await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS social_instagram_url VARCHAR(500)`);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_lead_candidates_web_scrape_status ON lead_candidates(web_scrape_status)`);
+  // ─── KVKK / PII Accountability (migration) ───────────────────────────────
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS pii_classification VARCHAR(20) DEFAULT 'unknown'`);
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS pii_anonymized BOOLEAN DEFAULT false`);
+  await db.execute(sql`ALTER TABLE IF EXISTS lead_candidates ADD COLUMN IF NOT EXISTS pii_anonymized_at TIMESTAMP NULL`);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS data_processing_log (
+      id                SERIAL PRIMARY KEY,
+      lead_candidate_id INTEGER REFERENCES lead_candidates(id),
+      domain            VARCHAR(255) NOT NULL,
+      data_collected    JSONB,
+      legal_basis       VARCHAR(60) DEFAULT 'legitimate_interest_kvkk_5_2_f',
+      pii_classification VARCHAR(20),
+      source_url        VARCHAR(500),
+      collected_at      TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `);
+  await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_data_processing_log_domain ON data_processing_log(domain)`);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS kvkk_objections (
+      id                  SERIAL PRIMARY KEY,
+      identifier          VARCHAR(255) NOT NULL,
+      requester_contact   VARCHAR(255),
+      request_type        VARCHAR(20) DEFAULT 'objection',
+      received_at         TIMESTAMP NOT NULL DEFAULT NOW(),
+      processed_at        TIMESTAMP NULL,
+      action_taken        VARCHAR(30),
+      affected_row_count  INTEGER DEFAULT 0,
+      notes               TEXT
+    )
+  `);
+  // ─── KVKK backfill: mevcut satırları e-posta'ya göre sınıflandır ──────────
+  // Corporate: genel posta kutusu VEYA email domain = web site domain'i
+  // Personal: ücretsiz sağlayıcı VEYA ad.soyad pattern'i
+  setImmediate(async () => {
+    try {
+      await db.execute(sql`
+        UPDATE lead_candidates
+        SET pii_classification = CASE
+          WHEN web_scrape_email IS NULL THEN 'unknown'
+          WHEN
+            split_part(lower(web_scrape_email), '@', 1) = ANY(ARRAY[
+              'info','iletisim','bilgi','destek','satis','kurumsal','muhasebe',
+              'ik','kariyer','admin','contact','sales','support','hello'
+            ])
+            OR split_part(lower(web_scrape_email), '@', 2) =
+               regexp_replace(lower(domain), '^www\\.', '')
+            THEN 'corporate'
+          WHEN
+            split_part(lower(web_scrape_email), '@', 2) = ANY(ARRAY[
+              'gmail.com','hotmail.com','yahoo.com','outlook.com',
+              'icloud.com','yandex.com','yandex.ru'
+            ])
+            OR split_part(lower(web_scrape_email), '@', 1) ~ '^[a-z]+[._][a-z]+$'
+            THEN 'personal'
+          ELSE 'unknown'
+        END
+        WHERE pii_classification = 'unknown'
+          AND web_scrape_email IS NOT NULL
+          AND pii_anonymized IS NOT TRUE
+      `);
+      logger.info("KVKK PII backfill tamamlandı");
+    } catch (err) {
+      logger.warn({ err }, "KVKK PII backfill hatası");
+    }
+  });
   // Startup cleanup: is_alive=FALSE domainleri web scrape kuyruğundan çıkar
   setImmediate(async () => {
     try {

@@ -1,0 +1,74 @@
+CyberStep KVKK compliance layer. Add data processing accountability + 
+objection-based anonymization. DB table is `lead_candidates`. Do NOT delete 
+rows on objection — anonymize PII fields only, keep domain/city/sector/security data.
+
+=== TASK 1: Schema migration ===
+Add to `lead_candidates`:
+- pii_classification VARCHAR(20) DEFAULT 'unknown'  -- 'corporate' | 'personal' | 'unknown'
+- pii_anonymized BOOLEAN DEFAULT false
+- pii_anonymized_at TIMESTAMP NULL
+
+Create table `data_processing_log` (KVKK işleme kaydı / accountability):
+- id SERIAL PRIMARY KEY
+- lead_candidate_id INTEGER REFERENCES lead_candidates(id)
+- domain VARCHAR(255) NOT NULL
+- data_collected JSONB       -- which PII fields were captured, e.g. {"email":true,"phone":true,"address":false}
+- legal_basis VARCHAR(60) DEFAULT 'legitimate_interest_kvkk_5_2_f'
+- pii_classification VARCHAR(20)
+- source_url VARCHAR(500)
+- collected_at TIMESTAMP DEFAULT now()
+- INDEX on domain
+
+Create table `kvkk_objections` (veri sahibi başvuru kaydı):
+- id SERIAL PRIMARY KEY
+- identifier VARCHAR(255) NOT NULL   -- domain or email the requester provided
+- requester_contact VARCHAR(255)     -- how they reached us (email)
+- request_type VARCHAR(20) DEFAULT 'objection'  -- 'objection' | 'deletion'
+- received_at TIMESTAMP DEFAULT now()
+- processed_at TIMESTAMP NULL
+- action_taken VARCHAR(30) NULL       -- 'anonymized' | 'rejected' | 'not_found'
+- affected_row_count INTEGER DEFAULT 0
+- notes TEXT
+
+=== TASK 2: PII classification (add to web-scraper.ts) ===
+When scraping writes an email, classify and set pii_classification:
+
+- 'corporate' if the local part is a generic mailbox 
+  (info, iletisim, bilgi, destek, satis, kurumsal, muhasebe, ik, kariyer, 
+   admin, contact, sales, support, hello) 
+  OR the email domain equals the website domain.
+- 'personal' if free provider (gmail, hotmail, yahoo, outlook, icloud, yandex) 
+  OR local part matches firstname.lastname pattern (word.word, word_word).
+- 'unknown' otherwise.
+
+Also write a row to data_processing_log for every scrape that captured any 
+PII field (email/phone/address), recording which fields, the classification, 
+and source_url. This is the accountability trail.
+
+=== TASK 3: Anonymization endpoint ===
+POST /api/admin-panel/kvkk/anonymize
+Body: { "identifier": "example.com" }  // domain OR an email address
+Logic:
+1. Match lead_candidates by domain = identifier OR web_scrape_email = identifier.
+2. For each match, set to NULL: web_scrape_email, scraped_phone, scraped_address.
+   Set pii_anonymized = true, pii_anonymized_at = now().
+   KEEP: domain, city, sector, scraped_company_name, and all domain_scans-derived 
+   security data. (These are non-personal / corporate and stay in the index.)
+3. Write a kvkk_objections row: request_type from body (default 'objection'), 
+   action_taken = 'anonymized' (or 'not_found' if 0 matches), 
+   affected_row_count, processed_at = now().
+4. Return { success, affected_row_count, action_taken }.
+
+Add a companion lookup endpoint so we can answer "what data do you hold on me":
+GET /api/admin-panel/kvkk/lookup?identifier=example.com
+Returns the matching rows' domain, pii_classification, which PII fields are 
+populated (booleans, not the values), pii_anonymized status, and collected_at 
+from data_processing_log. Read-only.
+
+=== TASK 4: Backfill ===
+One-time: classify existing rows that already have web_scrape_email using the 
+Task 2 rules, and populate pii_classification. Do not overwrite rows already 
+anonymized.
+
+Make all endpoints admin-auth protected. Provide the migration as a runnable 
+script. Show me the final column list and endpoint signatures when done.

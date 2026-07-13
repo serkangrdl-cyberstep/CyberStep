@@ -59,6 +59,8 @@ export interface WebScrapeResult {
   city: string | null;
   sector: string | null;
   sectorConfidence: number | null;
+  // KVKK PII sınıflandırması
+  piiClassification: "corporate" | "personal" | "unknown";
   // Meta
   sourceUrl: string;
 }
@@ -484,6 +486,42 @@ function detectSector(text: string): { sector: string | null; confidence: number
   return { sector: canonicalSector, confidence: topScore };
 }
 
+// ─── KVKK PII Sınıflandırması ─────────────────────────────────────────────────
+// Scraper'ın yakaladığı e-posta adresini 'corporate' | 'personal' | 'unknown' olarak
+// sınıflandırır. Yasal dayanak KVKK m.5/2-f (meşru menfaat); 'corporate' adreslere
+// daha güçlü dayanak — kişisel veriden ziyade kurumsal iletişim kanalı.
+
+const GENERIC_MAILBOXES = new Set([
+  "info", "iletisim", "bilgi", "destek", "satis", "kurumsal", "muhasebe",
+  "ik", "kariyer", "admin", "contact", "sales", "support", "hello",
+]);
+const FREE_PROVIDERS = new Set([
+  "gmail.com", "hotmail.com", "yahoo.com", "outlook.com",
+  "icloud.com", "yandex.com", "yandex.ru",
+]);
+// ad.soyad veya ad_soyad pattern'i — kişisel hesap sinyali
+const PERSONAL_LOCAL_RE = /^[a-z]+[._][a-z]+$/i;
+
+export function classifyPii(
+  email: string | null,
+  websiteDomain: string,
+): "corporate" | "personal" | "unknown" {
+  if (!email) return "unknown";
+  const atIdx = email.indexOf("@");
+  if (atIdx < 1) return "unknown";
+  const local = email.slice(0, atIdx).toLowerCase();
+  const domain = email.slice(atIdx + 1).toLowerCase();
+
+  // Corporate: genel posta kutusu VEYA email domain = web sitesi domain'i
+  const bare = websiteDomain.replace(/^www\./i, "").toLowerCase();
+  if (GENERIC_MAILBOXES.has(local) || domain === bare) return "corporate";
+
+  // Personal: ücretsiz sağlayıcı VEYA ad.soyad pattern'i
+  if (FREE_PROVIDERS.has(domain) || PERSONAL_LOCAL_RE.test(local)) return "personal";
+
+  return "unknown";
+}
+
 // ─── Ücretsiz Şehir Tespiti ───────────────────────────────────────────────────
 
 function detectCityFromText(text: string): string | null {
@@ -561,8 +599,10 @@ export async function scrapeDomain(
   const { sector, confidence: sectorConfidence } = detectSector(sectorText);
 
   // ─── Sonuç birleştirme ────────────────────────────────────────────────────
+  const piiClassification = classifyPii(email, base);
+
   logger.debug(
-    { domain: base, httpStatus, city, sector, sectorConfidence, email, emailDomain, phone: !!phone, cms: cmsDetected },
+    { domain: base, httpStatus, city, sector, sectorConfidence, email, emailDomain, piiClassification, phone: !!phone, cms: cmsDetected },
     "web-scraper: tamamlandı",
   );
 
@@ -585,6 +625,7 @@ export async function scrapeDomain(
       city,
       sector,
       sectorConfidence: sectorConfidence > 0 ? sectorConfidence : null,
+      piiClassification,
       sourceUrl,
     },
   };
