@@ -160,7 +160,7 @@ interface EnrichmentDashboard {
   progress: {
     total: number; sector_filled: number; city_filled: number; both_filled: number;
     enriched: number; pending: number; no_match: number; failed: number;
-    last_haiku_run: string | null; last_sector_run: string | null; batch_running: boolean;
+    last_web_scrape_run: string | null; last_sector_run: string | null; batch_running: boolean;
   };
   sector_dist: { sector: string; count: number }[];
   city_dist: { city: string; count: number }[];
@@ -4183,7 +4183,7 @@ export default function AdminLeadDiscovery() {
             <Card>
               <CardContent className="pt-4 pb-3">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-xs text-muted-foreground">Claude Haiku ile sektör/şehir zenginleştirme durumu</span>
+                  <span className="text-xs text-muted-foreground">Web scraper ile sektör/şehir/iletişim zenginleştirme durumu</span>
                   <div className="ml-auto flex items-center gap-2">
                     {(enrichmentDash?.normalize_issues?.length ?? 0) > 0 && (
                       <Button
@@ -4255,15 +4255,15 @@ export default function AdminLeadDiscovery() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Card>
                     <CardHeader className="pb-1 pt-4 px-4">
-                      <CardTitle className="text-sm">Son Haiku Çalışması</CardTitle>
+                      <CardTitle className="text-sm">Son Web Scrape Çalışması</CardTitle>
                     </CardHeader>
                     <CardContent className="px-4 pb-4">
                       <div className="text-sm font-mono text-slate-300">
-                        {enrichmentDash.progress.last_haiku_run
-                          ? new Date(enrichmentDash.progress.last_haiku_run).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" })
+                        {enrichmentDash.progress.last_web_scrape_run
+                          ? new Date(enrichmentDash.progress.last_web_scrape_run).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" })
                           : "—"}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1">Her gece 02:30 İstanbul • 500 domain/gece</div>
+                      <div className="text-xs text-muted-foreground mt-1">Her gece 02:30 İstanbul • web scraper ile sektör/şehir/iletişim</div>
                     </CardContent>
                   </Card>
                   <Card>

@@ -1,5 +1,5 @@
 /**
- * Admin Panel — Haiku Domain Enrichment Endpoints
+ * Admin Panel — Web Scraper Domain Enrichment Endpoints
  *
  * POST /api/admin-panel/enrichment/run             — batch'i fire-and-forget başlat
  * GET  /api/admin-panel/enrichment/status          — istatistik + ilerleme
@@ -111,7 +111,7 @@ router.get("/admin-panel/enrichment/dashboard", requireAdmin, async (_req: Reque
       db.execute<{
         total: number; sector_filled: number; city_filled: number;
         both_filled: number; enriched: number; pending: number; no_match: number; failed: number;
-        last_haiku_run: string | null; last_sector_run: string | null;
+        last_web_scrape_run: string | null; last_sector_run: string | null;
       }>(sql`
         SELECT
           COUNT(*)                                                               AS total,
@@ -123,7 +123,7 @@ router.get("/admin-panel/enrichment/dashboard", requireAdmin, async (_req: Reque
           COUNT(*) FILTER (WHERE enrichment_status = 'pending')                AS pending,
           COUNT(*) FILTER (WHERE enrichment_status = 'no_match')               AS no_match,
           COUNT(*) FILTER (WHERE enrichment_status = 'failed')                 AS failed,
-          MAX(enrichment_completed_at)                                          AS last_haiku_run,
+          MAX(web_scraped_at)                                                   AS last_web_scrape_run,
           MAX(sector_enriched_at)                                               AS last_sector_run
         FROM lead_candidates
       `),
@@ -138,12 +138,12 @@ router.get("/admin-panel/enrichment/dashboard", requireAdmin, async (_req: Reque
         LIMIT 20
       `),
 
-      // Şehir dağılımı
+      // Şehir dağılımı — INITCAP(LOWER(...)) ile büyük/küçük harf varyantlarını (İSTANBUL, İstanbul) birleştir
       db.execute<{ city: string; count: number }>(sql`
-        SELECT city, COUNT(*) AS count
+        SELECT INITCAP(LOWER(city)) AS city, COUNT(*) AS count
         FROM lead_candidates
         WHERE city IS NOT NULL AND city != ''
-        GROUP BY city
+        GROUP BY INITCAP(LOWER(city))
         ORDER BY count DESC
         LIMIT 20
       `),
@@ -189,8 +189,8 @@ router.get("/admin-panel/enrichment/dashboard", requireAdmin, async (_req: Reque
         pending:        Number(p.pending ?? 0),
         no_match:       Number(p.no_match ?? 0),
         failed:         Number(p.failed ?? 0),
-        last_haiku_run: p.last_haiku_run ?? null,
-        last_sector_run:p.last_sector_run ?? null,
+        last_web_scrape_run: p.last_web_scrape_run ?? null,
+        last_sector_run:     p.last_sector_run ?? null,
         batch_running:  batchRunning,
       },
       sector_dist: sectorDist.rows.map(r => ({ sector: r.sector, count: Number(r.count) })),
