@@ -2,14 +2,10 @@
  * Batch Web Contact & Company Intelligence Scraper
  *
  * lead_candidates tablosundaki web_scrape_status=NULL ve is_alive=TRUE olan
- * domainleri saatlik 4 partide işler.
+ * domainleri saatlik 4 partide işler. Tamamen ücretsiz — AI çağrısı yok.
  *
  * Throughput hedefi:
  *   BATCH_SIZE=200, CONCURRENCY=10, her 15 dakika → 800/saat → ~4.5 gün backlog
- *
- * Haiku entegrasyonu:
- *   Web scraper sektör bulursa enrichment_status='enriched' + enrichment_method='web_scrape'
- *   set eder → haiku_enrichment o domain'i atlar (sector IS NULL kontrolü).
  */
 
 import { sql } from "drizzle-orm";
@@ -92,10 +88,6 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
           stats.no_data++;
         } else {
           const now = new Date();
-          // services dizisi JSON string olarak saklanır (jsonb sütun)
-          const servicesJson = result.services.length > 0
-            ? JSON.stringify(result.services)
-            : null;
 
           await db.execute(sql`
             UPDATE lead_candidates SET
@@ -109,9 +101,7 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
               scraped_company_name   = COALESCE(scraped_company_name, ${result.companyName}),
               web_scrape_email       = COALESCE(web_scrape_email,     ${result.email}),
 
-              -- Şirket profili (her zaman güncellenir — en güncel scrape sonucu)
-              company_about_summary  = ${result.aboutSummary},
-              company_services       = ${servicesJson}::jsonb,
+              -- Şirket profili (regex tabanlı, ücretsiz)
               company_founded_year   = COALESCE(company_founded_year, ${result.foundedYear}),
               is_b2b                 = ${result.isB2b},
               has_ecommerce          = ${result.hasEcommerce},
@@ -121,20 +111,8 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
               social_linkedin_url    = COALESCE(social_linkedin_url,  ${result.linkedinUrl}),
               social_instagram_url   = COALESCE(social_instagram_url, ${result.instagramUrl}),
 
-              -- Coğrafya: web scrape gerçek veri > AI tahmini
-              city                   = COALESCE(city,   ${result.city}),
-              region                 = COALESCE(region, ${result.region}),
-
-              -- Sektör: web scrape bulursa haiku_enrichment adımını atla
-              sector           = COALESCE(sector, ${result.sector}),
-              enrichment_status = CASE
-                WHEN sector IS NULL AND ${result.sector} IS NOT NULL THEN 'enriched'
-                ELSE enrichment_status
-              END,
-              enrichment_method = CASE
-                WHEN sector IS NULL AND ${result.sector} IS NOT NULL THEN 'web_scrape'
-                ELSE enrichment_method
-              END
+              -- Coğrafya: web scrape (ücretsiz regex) > mevcut değer
+              city                   = COALESCE(city, ${result.city})
 
             WHERE id = ${row.id}
           `);
@@ -159,11 +137,9 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
     }));
   }
 
-  // Maliyet tahmini: ~1200 token/domain × Haiku fiyatı (~$0.002/1K token)
-  // Input: ~900t × $0.8/M = $0.00072, Output: ~300t × $4/M = $0.0012 → ~$0.0019/domain
-  const cost_estimate_usd = stats.scraped * 0.0019;
+  const cost_estimate_usd = 0; // Tamamen ücretsiz — AI çağrısı yok
 
-  logger.info({ ...stats, cost_estimate_usd }, "Web scrape batch tamamlandı");
+  logger.info({ ...stats }, "Web scrape batch tamamlandı");
   return { ...stats, cost_estimate_usd };
 }
 

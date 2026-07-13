@@ -3,22 +3,19 @@
  *
  * Bir domain'in web sitesini ziyaret ederek iletişim bilgileri ve şirket
  * profilini çıkarır. Homepage + iletişim + hakkımızda sayfaları →
- * regex (email/telefon/sosyal) + tek Claude Haiku çağrısı → yapılandırılmış JSON.
+ * tamamen ücretsiz regex (email/telefon/sosyal/şehir/CMS/B2B).
  *
  * Stratejisi:
  *   1. Homepage  → meta açıklama, başlık, sosyal linkler, CMS, e-ticaret sinyali
  *   2. İletişim  → e-posta, telefon, adres (ilk eşleşen path alınır)
- *   3. Hakkımızda → kuruluş yılı, şirket özeti (ilk eşleşen path)
+ *   3. Hakkımızda → kuruluş yılı (ilk eşleşen path)
  *   4. HEAD kontrol → /kvkk, /kariyer varlığı
- *   5. Claude Haiku → sektör, özet, hizmetler, B2B, şehir
+ *   5. Ücretsiz şehir tespiti → 81 il adı metinde regex ile aranır
  */
 
-import { anthropic } from "@workspace/integrations-anthropic-ai";
-import { logAiCost } from "../aiCostTracker";
 import { logger } from "../../lib/logger";
-import { SECTOR_LIST, TURKEY_CITIES, normalizeCity, getRegion } from "./haiku-enrichment";
+import { TURKEY_CITIES, normalizeCity } from "./haiku-enrichment";
 
-const HAIKU_MODEL = "claude-haiku-4-5";
 const FETCH_TIMEOUT_MS = 6_000;
 const HEAD_TIMEOUT_MS = 4_000;
 const MAX_HTML_BYTES = 250_000;
@@ -46,8 +43,6 @@ export interface WebScrapeResult {
   email: string | null;
   // Şirket Profili
   companyName: string | null;
-  aboutSummary: string | null;
-  services: string[];
   foundedYear: number | null;
   isB2b: boolean;
   hasEcommerce: boolean;
@@ -59,10 +54,8 @@ export interface WebScrapeResult {
   // Sosyal
   linkedinUrl: string | null;
   instagramUrl: string | null;
-  // AI çıkarımı
-  sector: string | null;
+  // Ücretsiz regex tespiti
   city: string | null;
-  region: string | null;
   // Meta
   sourceUrl: string;
 }
@@ -258,91 +251,17 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-// ─── Claude Haiku Çıkarımı ────────────────────────────────────────────────────
+// ─── Ücretsiz Şehir Tespiti ───────────────────────────────────────────────────
 
-interface HaikuExtract {
-  sector: string | null;
-  about_summary: string | null;
-  services: string[];
-  founded_year: number | null;
-  is_b2b: boolean;
-  city: string | null;
-}
-
-async function extractWithHaiku(opts: {
-  domain: string;
-  title: string | null;
-  metaDesc: string | null;
-  contactText: string | null;
-  aboutText: string | null;
-  companyName: string | null;
-}): Promise<HaikuExtract> {
-  const empty: HaikuExtract = {
-    sector: null, about_summary: null, services: [],
-    founded_year: null, is_b2b: false, city: null,
-  };
-
-  const parts: string[] = [];
-  if (opts.companyName) parts.push(`Şirket: ${opts.companyName}`);
-  if (opts.title) parts.push(`Başlık: ${opts.title}`);
-  if (opts.metaDesc) parts.push(`Meta: ${opts.metaDesc}`);
-  if (opts.aboutText) parts.push(`Hakkımızda: ${opts.aboutText.slice(0, 700)}`);
-  if (opts.contactText) parts.push(`İletişim: ${opts.contactText.slice(0, 350)}`);
-
-  if (parts.length < 2) return empty;
-
-  const prompt =
-    `Web sitesi verilerinden şirket profilini çıkar.\n\n${parts.join("\n")}\n\n` +
-    `Sektörler: ${SECTOR_LIST.join(", ")}\n` +
-    `Şehirler (sadece bunlardan): ${TURKEY_CITIES.join(", ")}\n\n` +
-    `Kurallar:\n` +
-    `- sector: Sektör listesinden biri veya null\n` +
-    `- about_summary: 1-2 cümle Türkçe özet veya null\n` +
-    `- services: şirketin sunduğu hizmet/ürün listesi (max 6 madde, kısa), boş array yoksa\n` +
-    `- founded_year: kuruluş yılı rakam veya null\n` +
-    `- is_b2b: true/false\n` +
-    `- city: Türkiye şehri veya null\n\n` +
-    `Sadece JSON döndür:\n` +
-    `{"sector":null,"about_summary":null,"services":[],"founded_year":null,"is_b2b":false,"city":null}`;
-
-  const msg = await anthropic.messages.create({
-    model: HAIKU_MODEL,
-    max_tokens: 350,
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  void logAiCost({
-    task: "web-scrape-intelligence",
-    service: "domain-enrichment",
-    model: HAIKU_MODEL,
-    inputTokens: msg.usage.input_tokens,
-    outputTokens: msg.usage.output_tokens,
-    cacheType: "none",
-  });
-
-  const block = msg.content[0];
-  const raw = block?.type === "text" ? block.text : "";
-  try {
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return empty;
-    const p = JSON.parse(jsonMatch[0]) as Partial<HaikuExtract>;
-    const now = new Date().getFullYear();
-    return {
-      sector: typeof p.sector === "string" && SECTOR_LIST.includes(p.sector) ? p.sector : null,
-      about_summary: typeof p.about_summary === "string" ? p.about_summary.slice(0, 500) : null,
-      services: Array.isArray(p.services)
-        ? p.services.slice(0, 6).map(s => String(s).slice(0, 80)).filter(Boolean)
-        : [],
-      founded_year:
-        typeof p.founded_year === "number" && p.founded_year >= 1900 && p.founded_year <= now
-          ? p.founded_year
-          : null,
-      is_b2b: p.is_b2b === true,
-      city: typeof p.city === "string" ? p.city.trim() : null,
-    };
-  } catch {
-    return empty;
+function detectCityFromText(text: string): string | null {
+  if (!text) return null;
+  const lower = text.toLowerCase();
+  for (const city of TURKEY_CITIES) {
+    if (lower.includes(city.toLowerCase())) {
+      return normalizeCity(city) ?? city;
+    }
   }
+  return null;
 }
 
 // ─── Ana Scraper Fonksiyonu ───────────────────────────────────────────────────
@@ -395,47 +314,27 @@ export async function scrapeDomain(
   const aboutText = aboutHtml ? stripHtml(aboutHtml).slice(0, 1000) : null;
   const address = contactText ? extractAddress(contactText) : null;
 
-  // ─── Claude Haiku ile derin çıkarım ──────────────────────────────────────
-  let haiku: HaikuExtract = {
-    sector: null, about_summary: null, services: [],
-    founded_year: null, is_b2b: false, city: null,
-  };
-  try {
-    haiku = await extractWithHaiku({
-      domain: base,
-      title,
-      metaDesc,
-      contactText,
-      aboutText,
-      companyName: existingCompanyName ?? title,
-    });
-  } catch (err) {
-    logger.warn({ domain: base, err }, "web-scraper: Haiku çağrısı başarısız, regex sonuçları kullanılacak");
-  }
+  // ─── Ücretsiz şehir tespiti ───────────────────────────────────────────────
+  const combinedText = [contactText, aboutText, address].filter(Boolean).join(" ");
+  const city = detectCityFromText(combinedText);
 
   // ─── Sonuç birleştirme ────────────────────────────────────────────────────
-  const rawCity = haiku.city;
-  const city = rawCity ? (normalizeCity(rawCity) ?? rawCity) : null;
-  const region = city ? getRegion(city) : null;
+  logger.debug({ domain: base, city, email, phone: !!phone, cms: cmsDetected }, "web-scraper: tamamlandı");
 
   return {
     phone,
     address,
     email,
     companyName: title,
-    aboutSummary: haiku.about_summary,
-    services: haiku.services,
-    foundedYear: haiku.founded_year ?? foundedYearRegex,
-    isB2b: haiku.is_b2b || isB2bRegex,
+    foundedYear: foundedYearRegex,
+    isB2b: isB2bRegex,
     hasEcommerce,
     hasKvkkPage,
     hasCareersPage,
     cmsDetected,
     linkedinUrl,
     instagramUrl,
-    sector: haiku.sector,
     city,
-    region,
     sourceUrl,
   };
 }

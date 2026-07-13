@@ -244,6 +244,19 @@ interface LeadCandidate {
   scrapedAddress: string | null;
   scrapedCompanyName: string | null;
   webScrapedAt: string | null;
+  webScrapeStatus: string | null;
+  webScrapeEmail: string | null;
+  webScrapeSourceUrl: string | null;
+  companyAboutSummary: string | null;
+  companyServices: string[] | null;
+  companyFoundedYear: number | null;
+  isB2b: boolean | null;
+  hasEcommerce: boolean | null;
+  hasKvkkPage: boolean | null;
+  hasCareersPage: boolean | null;
+  cmsDetected: string | null;
+  socialLinkedinUrl: string | null;
+  socialInstagramUrl: string | null;
   createdAt: string;
   scanId: number | null;
   wafDetected: boolean | null;
@@ -5289,6 +5302,99 @@ export default function AdminLeadDiscovery() {
                       <div>
                         <span className="text-muted-foreground">Sertifika Tarihi: </span>
                         <span>{new Date(detailCandidate.sourceData.notBefore as string).toLocaleDateString("tr-TR")}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Web Scraper Verileri */}
+              {detailCandidate.webScrapedAt && (
+                <div className="border border-slate-700/60 rounded-lg p-3 space-y-2.5 bg-slate-900/40">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Web Scraper
+                      {detailCandidate.webScrapeStatus === "scraped"
+                        ? <span className="ml-1.5 normal-case font-normal text-green-400">Toplandı</span>
+                        : detailCandidate.webScrapeStatus === "no_data"
+                        ? <span className="ml-1.5 normal-case font-normal text-slate-500">Veri Yok</span>
+                        : null}
+                    </div>
+                    <span className="text-[10px] text-slate-500">
+                      {new Date(detailCandidate.webScrapedAt).toLocaleDateString("tr-TR")}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {/* İletişim */}
+                    {(detailCandidate.webScrapeEmail ?? detailCandidate.scrapedPhone ?? detailCandidate.scrapedAddress) && (
+                      <>
+                        {detailCandidate.webScrapeEmail && (
+                          <div className="col-span-2">
+                            <span className="text-muted-foreground">E-posta: </span>
+                            <a href={`mailto:${detailCandidate.webScrapeEmail}`} className="text-blue-400 hover:underline font-mono">
+                              {detailCandidate.webScrapeEmail}
+                            </a>
+                          </div>
+                        )}
+                        {detailCandidate.scrapedPhone && (
+                          <div>
+                            <span className="text-muted-foreground">Telefon: </span>
+                            <span className="font-medium">{detailCandidate.scrapedPhone}</span>
+                          </div>
+                        )}
+                        {detailCandidate.scrapedAddress && (
+                          <div className="col-span-2">
+                            <span className="text-muted-foreground">Adres: </span>
+                            <span>{detailCandidate.scrapedAddress}</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Şirket Profili */}
+                    {detailCandidate.companyFoundedYear && (
+                      <div>
+                        <span className="text-muted-foreground">Kuruluş: </span>
+                        <span className="font-medium">{detailCandidate.companyFoundedYear}</span>
+                      </div>
+                    )}
+
+                    {/* Özellik Rozetleri */}
+                    <div className="col-span-2 flex flex-wrap gap-1.5 pt-0.5">
+                      {detailCandidate.isB2b && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-300 border border-blue-800/50">B2B</span>
+                      )}
+                      {detailCandidate.hasEcommerce && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300 border border-amber-800/50">E-ticaret</span>
+                      )}
+                      {detailCandidate.hasKvkkPage && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-900/40 text-green-300 border border-green-800/50">KVKK Sayfası</span>
+                      )}
+                      {detailCandidate.hasCareersPage && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/40 text-purple-300 border border-purple-800/50">Kariyer Sayfası</span>
+                      )}
+                      {detailCandidate.cmsDetected && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300 border border-slate-600/50 uppercase">
+                          {detailCandidate.cmsDetected}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Sosyal Medya */}
+                    {(detailCandidate.socialLinkedinUrl ?? detailCandidate.socialInstagramUrl) && (
+                      <div className="col-span-2 flex flex-wrap gap-3">
+                        {detailCandidate.socialLinkedinUrl && (
+                          <a href={detailCandidate.socialLinkedinUrl} target="_blank" rel="noopener noreferrer"
+                             className="text-blue-400 hover:underline text-[11px]">
+                            LinkedIn ↗
+                          </a>
+                        )}
+                        {detailCandidate.socialInstagramUrl && (
+                          <a href={detailCandidate.socialInstagramUrl} target="_blank" rel="noopener noreferrer"
+                             className="text-pink-400 hover:underline text-[11px]">
+                            Instagram ↗
+                          </a>
+                        )}
                       </div>
                     )}
                   </div>
