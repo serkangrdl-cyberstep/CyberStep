@@ -1,0 +1,883 @@
+[
+  {
+    "id": 1,
+    "assessment_id": 1,
+    "total_score": 78,
+    "max_score": 145,
+    "score_percent": 54,
+    "risk_level": "Yüksek",
+    "red_alarm_count": 3,
+    "red_alarm_questions": [
+      6,
+      11,
+      18
+    ],
+    "ai_analysis": "Yapılan siber güvenlik değerlendirmesi, 'Test' adlı KOBİ'nin mevcut siber güvenlik duruşunun zayıf olduğunu ve yüksek seviyede risk taşıdığını açıkça ortaya koymaktadır. 145 üzerinden alınan 78 puan (%54) ve 'Yüksek Risk Seviyesi' ibaresi, acil müdahale gerektiren önemli güvenlik açıklarının bulunduğunu göstermektedir. Özellikle üç adet 'Kırmızı Alarm' sorusu, firmanın kritik güvenlik alanlarında ciddi eksiklikleri olduğunu vurgulamaktadır.\n\n**Genel Değerlendirme ve Risk Odakları:**\nFirmanın genel güvenlik skoru, ortalamanın altında olup, siber saldırılara karşı önemli ölçüde savunmasız olduğunu işaret etmektedir. Bu durum, fidye yazılımı, veri ihlalleri veya iş sürekliliği kesintileri gibi ciddi tehditlerle karşılaşma olasılığını artırmaktadır. Kırmızı alarm olarak belirlenen Soru 6 (Kimlik ve Erişim Yönetimi), Soru 11 (E-posta ve İnsan Faktörü) ve Soru 18 (Veri Koruma ve Yedekleme) firmanın en kırılgan noktalarıdır ve öncelikli olarak ele alınması gerekmektedir.\n\n**Güçlü Yönler:**\nRapora göre, firmanın en güçlü alanı 'Cihaz Güvenliği' olup %84'lük bir puanla nispeten iyi bir duruş sergilemektedir. Soru 14 ve Soru 16'ya verilen 'evet' cevapları, uç nokta koruma, güncellemeler veya güvenlik duvarları gibi temel cihaz güvenliği önlemlerinin bir kısmının yürürlükte olduğunu düşündürmektedir. Bu, firmanın belirli teknik güvenlik kontrollerine yatırım yaptığını veya uyguladığını göstermektedir.\n\n**Zayıf Yönler ve Kırmızı Alarm Alanları:**\n\n1.  **E-posta ve İnsan Faktörü (Puan: 5/30 - %17):** Bu alan, firmanın en zayıf ve en riskli yönüdür. %17 gibi son derece düşük bir puan ve Soru 11'in 'Kırmızı Alarm' olarak belirlenmesi, e-posta güvenliği ve çalışanların siber farkındalığı konusunda büyük boşluklar olduğunu göstermektedir. Soru 9'a 'hayır' ve Soru 12'ye 'bilmiyorum' cevapları, düzenli eğitimlerin, kimlik avı simülasyonlarının veya ileri e-posta tehdit korumalarının eksikliğine işaret etmektedir. KOBİ'ler için oltalama (phishing) saldırıları en yaygın giriş yollarından biri olduğundan, bu durum firmanın ciddi bir risk altında olduğunu göstermektedir.\n\n2.  **Veri Koruma ve Yedekleme (Puan: 16/30 - %53):** Soru 18'e verilen 'hayır' cevabı ve bu sorunun 'Kırmızı Alarm' olması, firmanın veri yedekleme ve kurtarma süreçlerinde kritik eksiklikler olduğunu ortaya koymaktadır. Bu durum, herhangi bir veri kaybı (donanım arızası, siber saldırı, yanlışlıkla silme vb.) karşısında iş sürekliliğini ciddi şekilde tehlikeye atmaktadır. 'Kısmen' cevapları (Soru 19, Soru 20) ise mevcut yedekleme uygulamalarının yetersiz veya eksik olduğunu düşündürmektedir.\n\n3.  **Kimlik ve Erişim Yönetimi (Puan: 21/35 - %60):** Soru 6'ya verilen 'hayır' cevabı ve 'Kırmızı Alarm' durumu, zayıf parola politikaları, çok faktörlü kimlik doğrulamanın (MFA) eksikliği veya yetersiz erişim kontrolleri gibi kritik bir eksikliği işaret etmektedir. Soru 8'e verilen 'bilmiyorum' cevabı ise, erişim yetkilerinin gözden geçirilmesi veya ayrıcalıklı erişim yönetimi konularında belirsizlik olduğunu göstermektedir. Bu, yetkisiz erişim ve sistem sızmaları için bir kapı aralayabilir.\n\n4.  **Firma ve Yönetişim (Puan: 15/25 - %60):** 'Kısmen' ve 'bilmiyorum' cevapları, firmanın siber güvenlik politikalarını, prosedürlerini ve risk yönetimini tam olarak belirlemediğini veya uygulayamadığını göstermektedir. Bu durum, güvenlik kültürünün tam oturmadığına ve üst yönetimin siber güvenliğe yeterli önemi vermediğine işaret edebilir.\n\n**Sektöre Özgü Riskler (KOBİ - 11-50 Çalışan):**\nKOBİ'ler genellikle büyük firmalara kıyasla daha sınırlı bütçe, teknik personel ve uzmanlık kaynaklarına sahiptir. Bu durum, karmaşık siber güvenlik çözümlerini uygulamakta zorlanmalarına ve siber suçlular için daha kolay hedefler olmalarına neden olur. Bu firmanın sektörü belirtilmemiş olsa da, genel KOBİ riskleri şunlardır:\n*   **Hedef Olma:** Büyük şirketlerin tedarik zincirlerinin bir parçası olarak veya doğrudan saldırıya uğrayabilirler.\n*   **Kaynak Kısıtlılığı:** Siber güvenlik için ayrılan bütçe ve uzman personel eksikliği.\n*   **Çalışan Farkındalığı:** Sınırlı eğitim nedeniyle çalışanların oltalama ve sosyal mühendislik saldırılarına karşı daha savunmasız olması.\n*   **İş Sürekliliği:** Bir siber saldırı sonucu işlerin durması, KOBİ'ler için çok daha yıkıcı sonuçlar doğurabilir.\n\n**Sonuç:**\n'Test' firması, yüksek risk seviyesi ve birden fazla kritik güvenlik açığıyla karşı karşıyadır. Özellikle 'E-posta ve İnsan Faktörü', 'Veri Koruma ve Yedekleme' ve 'Kimlik ve Erişim Yönetimi' alanlarındaki eksiklikler, acil eylem gerektirmektedir. Firmanın bu zayıflıkları gidermesi, siber güvenlik duruşunu güçlendirmesi ve olası saldırılara karşı direncini artırması kritik önem taşımaktadır.\n",
+    "recommendations": [
+      "Tüm çalışanlara düzenli ve interaktif siber güvenlik farkındalık eğitimleri verilmeli, oltalama (phishing) simülasyonları ile pratik deneyim kazandırılmalıdır.",
+      "Tüm kritik verilerin düzenli olarak yedeklenmesi sağlanmalı ve yedeklerin kurtarılabilirliği periyodik olarak test edilmelidir.",
+      "Çok Faktörlü Kimlik Doğrulama (MFA) tüm hesaplar için zorunlu hale getirilmeli ve güçlü parola politikaları uygulanmalıdır.",
+      "E-posta güvenliği çözümleri (anti-phishing, spam filtreleme) devreye alınarak e-posta kaynaklı tehditler minimize edilmelidir.",
+      "Siber güvenlik risklerini belirlemek ve yönetmek için temel bir siber güvenlik politikası ve yönetim çerçevesi oluşturulmalıdır.",
+      "Tüm sistemler ve yazılımlar için güvenlik yamaları düzenli olarak uygulanmalı ve güncel tutulmalıdır.",
+      "Erişim yetkileri periyodik olarak gözden geçirilmeli ve 'en az ayrıcalık' prensibi benimsenmelidir.",
+      "Basit bir siber güvenlik olay müdahale planı hazırlanarak olası ihlallere karşı hazırlıklı olunmalıdır."
+    ],
+    "domain_scores": [
+      {
+        "score": 15,
+        "domain": "Firma ve Yönetişim",
+        "percent": 60,
+        "maxScore": 25
+      },
+      {
+        "score": 21,
+        "domain": "Kimlik ve Erişim",
+        "percent": 60,
+        "maxScore": 35
+      },
+      {
+        "score": 5,
+        "domain": "E-posta ve İnsan Faktörü",
+        "percent": 17,
+        "maxScore": 30
+      },
+      {
+        "score": 21,
+        "domain": "Cihaz Güvenliği",
+        "percent": 84,
+        "maxScore": 25
+      },
+      {
+        "score": 16,
+        "domain": "Veri Koruma ve Yedekleme",
+        "percent": 53,
+        "maxScore": 30
+      }
+    ],
+    "created_at": "2026-05-24T13:48:24.823Z",
+    "review_token": null,
+    "admin_notes": null,
+    "review_status": "pending_review",
+    "reviewed_at": null,
+    "verification_token": null,
+    "domain_scan_id": null,
+    "estimated_breach_cost_min": null,
+    "estimated_breach_cost_max": null,
+    "risk_reduction_percent": null,
+    "weekly_action_plan": [],
+    "kvkk_penalty_min": null,
+    "kvkk_penalty_max": null,
+    "kvkk_risk_level": null,
+    "kvkk_risk_articles": [],
+    "kvkk_risk_summary": null,
+    "sector_benchmark_percent": null,
+    "sector_benchmark_comment": null,
+    "verbis_required": null,
+    "verbis_risk_level": null,
+    "verbis_steps": [],
+    "insurance_readiness_percent": null,
+    "insurance_gaps": [],
+    "verified_at": null,
+    "verification_expires_at": null,
+    "verification_duration_years": null,
+    "certification_tier": 1,
+    "maturity_level": null,
+    "findings": [],
+    "expert_review_status": null,
+    "expert_reviewed_at": null,
+    "expert_notes": null,
+    "expert_reviewed_by": null,
+    "expert_badge_earned": false
+  },
+  {
+    "id": 2,
+    "assessment_id": 2,
+    "total_score": 76,
+    "max_score": 145,
+    "score_percent": 52,
+    "risk_level": "Yüksek",
+    "red_alarm_count": 2,
+    "red_alarm_questions": [
+      6,
+      17
+    ],
+    "ai_analysis": "## KOBİ Siber Güvenlik Değerlendirme Raporu - Testt Firması\n\n**Giriş**\nBu rapor, Testt firması için gerçekleştirilen mini siber güvenlik değerlendirmesinin sonuçlarını analiz etmektedir. Değerlendirme, firmanın mevcut siber güvenlik duruşunu anlamak, potansiyel risk alanlarını belirlemek ve iyileştirme için öncelikli adımları önermek amacıyla yapılmıştır. Sektör ve çalışan sayısı bilgileri mevcut olmamakla birlikte, KOBİ ölçeğindeki genel riskler ve ihtiyaçlar üzerinden bir yorum getirilmiştir.\n\n**Genel Değerlendirme**\nTestt firmasının genel siber güvenlik olgunluk seviyesi **76/145 (%52)** olarak belirlenmiş olup, bu durum **Yüksek Risk Seviyesi** olarak sınıflandırılmıştır. Elde edilen bu puan, firmanın siber saldırılara karşı önemli ölçüde savunmasız olduğunu ve acil aksiyon alınması gerektiğini göstermektedir. Özellikle iki adet kritik kırmızı alarm sorusu, mevcut güvenlik duruşunda ciddi boşluklar olduğunu vurgulamaktadır. Firmanın genel olarak siber güvenlik süreçleri, politikaları ve teknolojik önlemleri konusunda önemli eksiklikleri bulunmaktadır.\n\n**Güçlü ve Zayıf Yönler**\n\n**Zayıf Yönler:**\n\n1.  **Firma ve Yönetişim (%40):** En düşük puan alan alanlardan biridir. Bu, firmanın siber güvenlik stratejisi, politikaları, risk yönetimi ve genel güvenlik kültürü açısından ciddi eksiklikleri olduğunu göstermektedir. S2'ye 'hayır' ve S4'e 'bilmiyorum' cevapları, temel güvenlik politikalarının veya farkındalığının olmadığını, S3'e 'kısmen' cevabı ise bu konulardaki çabaların yetersiz kaldığını işaret etmektedir.\n2.  **Veri Koruma ve Yedekleme (%43):** Diğer bir zayıf alan olup, özellikle Soru 17'nin kırmızı alarmda ve 'hayır' olarak işaretlenmesi, firmanın veri kaybına veya fidye yazılım saldırılarına karşı son derece savunmasız olduğunu göstermektedir. S20'nin 'hayır' ve S19'un 'kısmen' olması da yedekleme ve kurtarma süreçlerinin ya hiç olmadığını ya da yetersiz olduğunu düşündürmektedir.\n3.  **Kritik Kırmızı Alarmlar:** Soru 6 (Kimlik ve Erişim) ve Soru 17 (Veri Koruma ve Yedekleme) ciddi ve acil müdahale gerektiren zafiyetlerdir.\n\n**Göreceli Güçlü Yönler:**\n\n1.  **Cihaz Güvenliği (%64):** Göreceli olarak en iyi performansı gösteren alan olmasına rağmen, %64'lük bir oran hala iyileştirmeye açık olduğunu işaret etmektedir. S14'e 'kısmen' ve S16'ya 'hayır' cevapları, cihaz güvenliğinde dahi önemli açıklar bulunduğunu göstermektedir (örn: yamalar veya merkezi yönetim eksikliği).\n2.  **Kimlik ve Erişim (%57) ve E-posta ve İnsan Faktörü (%57):** Bu alanlar orta düzeyde bir puan almış olsa da, kritik Soru 6'nın 'hayır' cevabı, kimlik ve erişim yönetiminde temel bir güvenlik boşluğunu ortaya koymaktadır. E-posta ve insan faktöründeki 'kısmen' (S11) ve 'hayır' (S10) cevapları ise, çalışan farkındalığının ve e-posta güvenliğinin risk altında olduğunu göstermektedir.\n\n**Kırmızı Alarm Alanları ve Potansiyel Etkileri**\n\nFirmanın siber güvenlik duruşundaki en kritik iki zafiyet şunlardır:\n\n1.  **Soru 6 [Kimlik ve Erişim/Kritik]: hayır**\n    Bu cevap, firmanın kritik sistemlere veya verilere erişimde çok faktörlü kimlik doğrulama (MFA) gibi temel güvenlik önlemlerini kullanmadığını veya yetersiz kullandığını düşündürmektedir. Bu durum, ele geçirilen kullanıcı adları ve şifreler aracılığıyla sistemlere yetkisiz erişim riskini (örn. oltalama saldırıları sonrası) önemli ölçüde artırmaktadır. Yetkisiz erişim, veri ihlali, sistem kesintisi veya fidye yazılımı gibi daha büyük saldırıların başlangıç noktası olabilir.\n\n2.  **Soru 17 [Veri Koruma ve Yedekleme/Kritik]: hayır**\n    Bu cevap, firmanın kritik verilerinin düzenli ve test edilmiş bir yedekleme mekanizması olmadığını veya yedeklemelerin güvenli bir şekilde saklanmadığını göstermektedir. Bu, bir fidye yazılımı saldırısı, donanım arızası veya insan hatası durumunda firmanın tüm operasyonlarını durdurabilecek, geri döndürülemez veri kaybı riskiyle karşı karşıya olduğu anlamına gelmektedir. Veri kaybı, hem maliyetli veri kurtarma çabalarına hem de firmanın itibarının zedelenmesine yol açabilir.\n\n**Sektöre Özgü Riskler (Genel KOBİ Perspektifi)**\nSektör belirtilmemiş olsa da, KOBİ'ler genellikle büyük firmalara kıyasla siber güvenlik bütçeleri ve uzmanlıkları sınırlı olduğu için ortak risklerle karşı karşıyadır:\n\n*   **Oltalama (Phishing) ve İş E-postası Uzlaşması (BEC) Saldırıları:** Kötü niyetli aktörler, çalışanların e-posta yoluyla kimlik bilgilerini çalmaya veya dolandırıcılık amaçlı ödeme talimatları göndermeye çalışır.\n*   **Fidye Yazılımı (Ransomware):** Özellikle kritik Soru 17'deki zafiyetle birleşince, fidye yazılımı saldırıları firmanın tüm verilerini şifreleyebilir ve operasyonları durma noktasına getirebilir, büyük maliyetlere yol açabilir.\n*   **Veri İhlalleri:** Müşteri, çalışan veya ticari sır niteliğindeki verilerin yetkisiz erişim sonucu ele geçirilmesi, KVKK (Kişisel Verilerin Korunması Kanunu) veya GDPR gibi düzenlemeler kapsamında ciddi yasal ve finansal yaptırımlara neden olabilir.\n*   **Zayıf Erişim Kontrolleri:** Soru 6'daki zafiyet nedeniyle, çalışanların eski veya zayıf şifreler kullanması, ayrılan çalışanların erişimlerinin düzgün kapatılmaması gibi durumlar yetkisiz erişime zemin hazırlayabilir.\n*   **Tedarik Zinciri Riskleri:** KOBİ'ler genellikle daha büyük firmaların tedarik zincirlerinin bir parçası olduğundan, onların zafiyetleri daha büyük saldırılar için bir giriş noktası olarak kullanılabilir.\n\n**Sonuç ve Acil Eylem Gerekliliği**\nTestt firması, mevcut siber güvenlik duruşuyla yüksek risk altında olup, siber saldırılara karşı oldukça savunmasızdır. Özellikle iki kritik kırmızı alarm alanı (Kimlik ve Erişim ile Veri Koruma ve Yedekleme) acil ve öncelikli müdahale gerektirmektedir. Firmanın siber güvenlik olgunluğunu artırmak için kapsamlı bir strateji geliştirmesi ve belirlenen zafiyetleri gidermesi hayati önem taşımaktadır. Bu adımlar atılmazsa, olası bir siber saldırı firmanın operasyonel sürekliliğini, finansal istikrarını ve itibarını ciddi şekilde tehlikeye atabilir.\n\n**Önemli Not:** Sektör ve çalışan sayısı bilgileri mevcut olsaydı, risk analizi daha spesifik hale getirilebilirdi. Bu nedenle, genel KOBİ riskleri üzerinden bir değerlendirme yapılmıştır.\n",
+    "recommendations": [
+      "Tüm kritik sistemler ve kullanıcı hesapları için çok faktörlü kimlik doğrulama (MFA) acilen uygulanmalıdır.",
+      "Kapsamlı ve düzenli veri yedekleme stratejisi oluşturularak, yedeklerin güvenli bir ortamda saklanması ve periyodik olarak geri yükleme testlerinin yapılması sağlanmalıdır.",
+      "Temel siber güvenlik politikaları (şifre, erişim, veri kullanımı) oluşturularak tüm çalışanlara düzenli ve zorunlu siber güvenlik farkındalık eğitimleri verilmelidir.",
+      "E-posta güvenlik çözümleri (anti-phishing, gelişmiş tehdit koruması) güçlendirilmeli ve çalışanlar oltalama saldırılarına karşı bilinçlendirilmelidir.",
+      "Tüm şirket cihazlarında güncel antivirüs/anti-malware yazılımları, otomatik güvenlik yamaları ve merkezi bir cihaz yönetimi (MDM) çözümü zorunlu hale getirilmelidir.",
+      "En az ayrıcalık prensibi doğrultusunda kullanıcı erişim yetkileri düzenli olarak gözden geçirilmeli ve ayrılan çalışanların erişimleri anında sonlandırılmalıdır.",
+      "Olay müdahale planı oluşturulmalı ve siber güvenlik olaylarına karşı hızlı ve etkili bir yanıt mekanizması belirlenmelidir."
+    ],
+    "domain_scores": [
+      {
+        "score": 10,
+        "domain": "Firma ve Yönetişim",
+        "percent": 40,
+        "maxScore": 25
+      },
+      {
+        "score": 20,
+        "domain": "Kimlik ve Erişim",
+        "percent": 57,
+        "maxScore": 35
+      },
+      {
+        "score": 17,
+        "domain": "E-posta ve İnsan Faktörü",
+        "percent": 57,
+        "maxScore": 30
+      },
+      {
+        "score": 16,
+        "domain": "Cihaz Güvenliği",
+        "percent": 64,
+        "maxScore": 25
+      },
+      {
+        "score": 13,
+        "domain": "Veri Koruma ve Yedekleme",
+        "percent": 43,
+        "maxScore": 30
+      }
+    ],
+    "created_at": "2026-05-24T14:04:16.487Z",
+    "review_token": null,
+    "admin_notes": null,
+    "review_status": "pending_review",
+    "reviewed_at": null,
+    "verification_token": null,
+    "domain_scan_id": null,
+    "estimated_breach_cost_min": null,
+    "estimated_breach_cost_max": null,
+    "risk_reduction_percent": null,
+    "weekly_action_plan": [],
+    "kvkk_penalty_min": null,
+    "kvkk_penalty_max": null,
+    "kvkk_risk_level": null,
+    "kvkk_risk_articles": [],
+    "kvkk_risk_summary": null,
+    "sector_benchmark_percent": null,
+    "sector_benchmark_comment": null,
+    "verbis_required": null,
+    "verbis_risk_level": null,
+    "verbis_steps": [],
+    "insurance_readiness_percent": null,
+    "insurance_gaps": [],
+    "verified_at": null,
+    "verification_expires_at": null,
+    "verification_duration_years": null,
+    "certification_tier": 1,
+    "maturity_level": null,
+    "findings": [],
+    "expert_review_status": null,
+    "expert_reviewed_at": null,
+    "expert_notes": null,
+    "expert_reviewed_by": null,
+    "expert_badge_earned": false
+  },
+  {
+    "id": 3,
+    "assessment_id": 12,
+    "total_score": 80,
+    "max_score": 150,
+    "score_percent": 53,
+    "risk_level": "Yüksek",
+    "red_alarm_count": 3,
+    "red_alarm_questions": [
+      12,
+      17,
+      5
+    ],
+    "ai_analysis": "Test Teknoloji A.Ş. siber güvenlik olgunluk değerlendirmesi 55 soru ve 10 alan üzerinden gerçekleştirildi. Genel skor %53 ile \"Gelişmekte\" seviyesine denk gelmektedir.\n\n  Kimlik ve erişim yönetiminde kritik açıklar tespit edildi: MFA kullanımı yetersiz, ayrıcalıklı erişim yönetimi ise neredeyse hiç uygulanmıyor. E-posta güvenliği konusunda SPF/DKIM/DMARC kayıtlarının eksikliği, şirketin domain spoofing saldırılarına karşı savunmasız kalmasına yol açıyor.\n\n  Olumlu tarafta, fiziksel güvenlik kontrolleri (%75) ve veri yedekleme pratiği (%69) görece güçlü görünmektedir. Bu alanlar üzerine inşa edilebilecek bir güvenlik programı, kısa vadede önemli risk azaltımı sağlayabilir.",
+    "recommendations": [
+      "MFA'yı tüm kritik hesaplarda 2 hafta içinde etkinleştirin",
+      "E-posta alan adına SPF, DKIM ve DMARC kayıtlarını ekleyin",
+      "Yedek geri yükleme testi yapın ve sonuçları belgeleyin",
+      "Çalışanlara kimlik avı farkındalık eğitimi verin",
+      "Ağ segmentasyonu için VLAN planlaması başlatın"
+    ],
+    "domain_scores": [
+      {
+        "score": 8,
+        "domain": "Yönetişim ve Risk Yönetimi",
+        "percent": 40,
+        "maxScore": 20
+      },
+      {
+        "score": 9,
+        "domain": "Kimlik ve Erişim Yönetimi",
+        "percent": 45,
+        "maxScore": 20
+      },
+      {
+        "score": 6,
+        "domain": "E-posta ve Sosyal Mühendislik",
+        "percent": 43,
+        "maxScore": 14
+      },
+      {
+        "score": 10,
+        "domain": "Uç Nokta ve Cihaz Güvenliği",
+        "percent": 63,
+        "maxScore": 16
+      },
+      {
+        "score": 7,
+        "domain": "Ağ Güvenliği",
+        "percent": 58,
+        "maxScore": 12
+      },
+      {
+        "score": 11,
+        "domain": "Veri Koruma ve Yedekleme",
+        "percent": 69,
+        "maxScore": 16
+      },
+      {
+        "score": 8,
+        "domain": "Yazılım ve Uygulama Güvenliği",
+        "percent": 57,
+        "maxScore": 14
+      },
+      {
+        "score": 9,
+        "domain": "Fiziksel Güvenlik",
+        "percent": 75,
+        "maxScore": 12
+      },
+      {
+        "score": 5,
+        "domain": "Tedarik Zinciri ve Üçüncü Taraf",
+        "percent": 50,
+        "maxScore": 10
+      },
+      {
+        "score": 7,
+        "domain": "Olay Müdahale ve İş Sürekliliği",
+        "percent": 44,
+        "maxScore": 16
+      }
+    ],
+    "created_at": "2026-05-30T16:06:54.029Z",
+    "review_token": null,
+    "admin_notes": null,
+    "review_status": "pending_review",
+    "reviewed_at": null,
+    "verification_token": null,
+    "domain_scan_id": null,
+    "estimated_breach_cost_min": 850000,
+    "estimated_breach_cost_max": 3200000,
+    "risk_reduction_percent": 42,
+    "weekly_action_plan": [
+      {
+        "week": 1,
+        "tasks": [
+          "Tüm yönetici hesaplarda MFA etkinleştirin",
+          "Varsayılan şifreleri değiştirin",
+          "Kullanılmayan hesapları devre dışı bırakın"
+        ],
+        "title": "Acil: MFA ve Hesap Güvenliği"
+      },
+      {
+        "week": 2,
+        "tasks": [
+          "SPF kaydı ekleyin",
+          "DKIM kaydı ekleyin",
+          "DMARC politikası oluşturun (p=quarantine)"
+        ],
+        "title": "E-posta Güvenliği"
+      },
+      {
+        "week": 3,
+        "tasks": [
+          "EDR çözümü seçin ve pilot kurulum yapın",
+          "Tüm cihazlarda güncelleme durumunu kontrol edin",
+          "USB devre dışı bırakma politikası uygulayın"
+        ],
+        "title": "Uç Nokta Koruması"
+      },
+      {
+        "week": 4,
+        "tasks": [
+          "VLAN planlaması yapın",
+          "Güvenlik duvarı kurallarını gözden geçirin",
+          "Uzak erişim VPN politikasını güncelleyin"
+        ],
+        "title": "Ağ Güvenliği"
+      },
+      {
+        "week": 5,
+        "tasks": [
+          "Kritik veri envanterini çıkarın",
+          "Veri sınıflandırma politikası oluşturun",
+          "DLP araçlarını değerlendirin"
+        ],
+        "title": "Veri Yönetimi"
+      },
+      {
+        "week": 6,
+        "tasks": [
+          "Yedekleme testi gerçekleştirin",
+          "RTO/RPO hedeflerini belirleyin",
+          "Bulut yedekleme çözümü değerlendirin"
+        ],
+        "title": "Yedekleme Doğrulama"
+      },
+      {
+        "week": 7,
+        "tasks": [
+          "Siber güvenlik politikasını hazırlayın",
+          "Çalışan farkındalık eğitimi planlayın",
+          "Tedarikçi güvenlik değerlendirmesi başlatın"
+        ],
+        "title": "Politika ve Farkındalık"
+      },
+      {
+        "week": 8,
+        "tasks": [
+          "8 haftalık ilerlemeyi değerlendirin",
+          "Açık kalan riskleri listeleyin",
+          "Bir sonraki çeyrek için yol haritası oluşturun"
+        ],
+        "title": "Olgunluk Değerlendirmesi"
+      }
+    ],
+    "kvkk_penalty_min": 94000,
+    "kvkk_penalty_max": 470000,
+    "kvkk_risk_level": "Yüksek",
+    "kvkk_risk_articles": [
+      "Md.12",
+      "Md.7",
+      "Md.10"
+    ],
+    "kvkk_risk_summary": "Mevcut güvenlik seviyenizde kişisel veri ihlali riski yüksektir. KVKK Md.12 kapsamında teknik tedbirlerin yetersizliği nedeniyle 94.000 TL ile 470.000 TL arasında idari yaptırım riski taşınmaktadır.",
+    "sector_benchmark_percent": 68,
+    "sector_benchmark_comment": "Teknoloji sektöründe benzer ölçekteki şirketlerin %68 diliminde yer alıyorsunuz. Sektör ortalaması %62, en iyi %10 ise %82 üzerindedir.",
+    "verbis_required": true,
+    "verbis_risk_level": "Yüksek",
+    "verbis_steps": [
+      "VERBİS portalında kayıt başvurusu yapın",
+      "Veri işleme envanteri oluşturun",
+      "Kişisel Veri İşleme Aydınlatma Metni yayınlayın",
+      "Veri sorumlusu iletişim bilgilerini güncelleyin"
+    ],
+    "insurance_readiness_percent": 47,
+    "insurance_gaps": [
+      "MFA eksikliği sigorta şartlarını zorlaştırıyor",
+      "Güvenlik politikası belgesi sigorta için zorunlu",
+      "Olay müdahale planı güncel değil"
+    ],
+    "verified_at": null,
+    "verification_expires_at": null,
+    "verification_duration_years": null,
+    "certification_tier": 1,
+    "maturity_level": "Gelişmekte (Seviye 2)",
+    "findings": [
+      {
+        "title": "Siber güvenlik politikası yok",
+        "domain": "Yönetişim ve Risk Yönetimi",
+        "severity": "Kritik",
+        "description": "Şirkette resmi bir siber güvenlik politikası bulunmuyor. Bu durum sorumluluğun belirsizliğine yol açıyor.",
+        "recommendation": "6 ay içinde ISO 27001 temel politika setini hazırlayın ve tüm çalışanlara duyurun."
+      },
+      {
+        "title": "MFA (Çok Faktörlü Doğrulama) Eksik",
+        "domain": "Kimlik ve Erişim Yönetimi",
+        "severity": "Kritik",
+        "description": "Kritik sistemlerde MFA kullanılmıyor. Ele geçirilen tek şifre tüm sistemlere erişim sağlayabilir.",
+        "recommendation": "Microsoft Authenticator veya Google Authenticator ile tüm hesaplarda MFA etkinleştirin."
+      },
+      {
+        "title": "SPF/DKIM/DMARC Kaydı Eksik",
+        "domain": "E-posta ve Sosyal Mühendislik",
+        "severity": "Yüksek",
+        "description": "E-posta alan adında anti-spoofing kayıtları bulunmuyor. Saldırganlar firma adına sahte mail gönderebilir.",
+        "recommendation": "DNS yöneticinizden SPF, DKIM ve DMARC kayıtlarını ekleyin."
+      },
+      {
+        "title": "Merkezi EDR Çözümü Yok",
+        "domain": "Uç Nokta ve Cihaz Güvenliği",
+        "severity": "Yüksek",
+        "description": "Uç noktalar bireysel antivirüs ile korunuyor ancak merkezi görünürlük ve yanıt kapasitesi yok.",
+        "recommendation": "Microsoft Defender for Business veya Crowdstrike gibi bir EDR çözümü değerlendirin."
+      },
+      {
+        "title": "Yedekleme Testi Yapılmıyor",
+        "domain": "Veri Koruma ve Yedekleme",
+        "severity": "Orta",
+        "description": "Düzenli yedek alınıyor ancak geri yükleme testleri yapılmadığından yedeklerin çalışıp çalışmadığı bilinmiyor.",
+        "recommendation": "Her çeyrekte bir yedek geri yükleme testi yapın ve sonuçları belgelein."
+      },
+      {
+        "title": "Ağ Segmentasyonu Yetersiz",
+        "domain": "Ağ Güvenliği",
+        "severity": "Orta",
+        "description": "Operasyonel ağ ile ofis ağı ayrılmamış. Bir cihazın ele geçirilmesi tüm ağı etkileyebilir.",
+        "recommendation": "VLAN veya ağ segmentasyonu uygulayarak kritik sistemleri izole edin."
+      },
+      {
+        "title": "Olay Müdahale Planı Güncel Değil",
+        "domain": "Olay Müdahale ve İş Sürekliliği",
+        "severity": "Düşük",
+        "description": "2 yıl önce hazırlanan plan, mevcut sistemleri ve personeli yansıtmıyor.",
+        "recommendation": "Planı yıllık olarak gözden geçirin ve yılda en az bir tatbikat yapın."
+      }
+    ],
+    "expert_review_status": null,
+    "expert_reviewed_at": null,
+    "expert_notes": null,
+    "expert_reviewed_by": null,
+    "expert_badge_earned": false
+  },
+  {
+    "id": 4,
+    "assessment_id": 13,
+    "total_score": 195,
+    "max_score": 195,
+    "score_percent": 100,
+    "risk_level": "İyi",
+    "red_alarm_count": 0,
+    "red_alarm_questions": [],
+    "ai_analysis": "G3 Test Şirketi olarak siber güvenlik alanındaki mevcut durumunuzu değerlendirdiğimizde, son derece başarılı bir tabloyla karşılaştığımızı belirtmek isteriz. Siber Sağlık Karnenizde %100'lük mükemmel bir skor elde etmiş olmanız, şirketinizin siber tehditlere karşı ne kadar hazırlıklı ve dirençli olduğunu açıkça göstermektedir. Bu sonuç, iş sürekliliğinizin güvence altında olduğu, müşteri verilerinizin en üst düzeyde korunduğu ve yasal düzenlemelere (KVKK gibi) tam uyum sağlandığı anlamına gelmektedir. Tüm değerlendirme alanlarında, Yönetişimden Veri Korumaya, Kimlik Yönetiminden Olay Müdahalesine kadar her kategoride tam puan almanız, siber güvenliğinizi bir bütün olarak ele aldığınızı ve bu alana yaptığınız yatırımların karşılığını aldığınızı kanıtlamaktadır.\n\nBu güçlü duruşunuz sayesinde, fidye saldırısı gibi yıkıcı tehditlere karşı önemli ölçüde korunmaktasınız ve olası bir saldırı durumunda işlerinizin aksamadan devam etme olasılığı çok yüksektir. Müşteri verilerinin korunması konusundaki hassasiyetiniz, hem itibarınızı güçlendirmekte hem de KVKK gibi yasal düzenlemelerden kaynaklanabilecek cezai riskleri ortadan kaldırmaktadır. Bu mükemmel skor, şirketinizin dijital varlıklarını ve operasyonlarını geleceğe güvenle taşıdığınızın bir göstergesidir. Bu rapor, işletmenizin siber sağlık karnesinin ilk adımıdır.",
+    "recommendations": [
+      "Mevcut yüksek güvenlik standartlarınızı korumak için tüm sistemlerinizi ve politikalarınızı düzenli olarak gözden geçirin.",
+      "Çalışanlarınızın siber güvenlik farkındalığını sürekli eğitimlerle en üst seviyede tutun ve yeni tehditler hakkında bilgilendirin.",
+      "Siber güvenlik dünyasındaki yeni tehditleri ve gelişmeleri yakından takip ederek savunma mekanizmalarınızı proaktif olarak güncelleyin.",
+      "İş sürekliliği ve olay müdahale planlarınızı belirli aralıklarla test ederek gerçek senaryolara karşı hazırlığınızı sürdürün.",
+      "Tedarikçilerinizle olan dijital ilişkilerinizdeki güvenlik standartlarını düzenli olarak kontrol edin ve onların da sizinle aynı seviyede olmasını sağlayın.",
+      "Siber sigorta poliçenizin kapsamını ve güncelliğini periyodik olarak değerlendirerek olası risklere karşı finansal korumanızı optimize edin."
+    ],
+    "domain_scores": [
+      {
+        "score": 10,
+        "domain": "Yönetişim ve Organizasyon",
+        "percent": 100,
+        "maxScore": 10
+      },
+      {
+        "score": 30,
+        "domain": "Kimlik ve Erişim Yönetimi",
+        "percent": 100,
+        "maxScore": 30
+      },
+      {
+        "score": 25,
+        "domain": "E-posta ve Sosyal Mühendislik",
+        "percent": 100,
+        "maxScore": 25
+      },
+      {
+        "score": 20,
+        "domain": "Cihaz ve Uç Nokta Güvenliği",
+        "percent": 100,
+        "maxScore": 20
+      },
+      {
+        "score": 20,
+        "domain": "Ağ Güvenliği",
+        "percent": 100,
+        "maxScore": 20
+      },
+      {
+        "score": 25,
+        "domain": "Veri Koruma ve Yedekleme",
+        "percent": 100,
+        "maxScore": 25
+      },
+      {
+        "score": 15,
+        "domain": "Yazılım ve Dijital Araçlar",
+        "percent": 100,
+        "maxScore": 15
+      },
+      {
+        "score": 15,
+        "domain": "Fiziksel Güvenlik",
+        "percent": 100,
+        "maxScore": 15
+      },
+      {
+        "score": 15,
+        "domain": "Tedarik Zinciri ve Dijital Varlıklar",
+        "percent": 100,
+        "maxScore": 15
+      },
+      {
+        "score": 20,
+        "domain": "Olay Müdahalesi ve İş Sürekliliği",
+        "percent": 100,
+        "maxScore": 20
+      }
+    ],
+    "created_at": "2026-06-22T10:51:17.537Z",
+    "review_token": "97428a55-1f77-4c39-93ae-36d35e42d817",
+    "admin_notes": null,
+    "review_status": "pending_review",
+    "reviewed_at": null,
+    "verification_token": null,
+    "domain_scan_id": null,
+    "estimated_breach_cost_min": 50000,
+    "estimated_breach_cost_max": 250000,
+    "risk_reduction_percent": 0,
+    "weekly_action_plan": [
+      {
+        "week": 1,
+        "tasks": [
+          "Mevcut siber güvenlik politikalarınızı ve prosedürlerinizi gözden geçirin, güncel olup olmadıklarını kontrol edin.",
+          "Tüm çalışanlarınıza mevcut güvenlik önlemlerinin önemini hatırlatan kısa bir bilgilendirme e-postası gönderin."
+        ],
+        "title": "Mevcut Durumu Gözden Geçirme"
+      },
+      {
+        "week": 2,
+        "tasks": [
+          "Çalışanlarınız için siber güvenlik farkındalık eğitimlerini tazeleyici bir oturum düzenleyin veya online bir modül atayın.",
+          "Olası sahte e-posta veya link yoluyla şifre/para çalma girişimlerine karşı dikkatli olmaları konusunda hatırlatma yapın."
+        ],
+        "title": "Farkındalık ve Eğitim"
+      },
+      {
+        "week": 3,
+        "tasks": [
+          "Tüm bilgisayarlarda zararlı yazılım tespit ve engelleme sistemlerinin sorunsuz çalıştığından emin olun.",
+          "Yedekleme sistemlerinizin düzenli çalıştığını ve yedeklerin kurtarılabilir olduğunu test edin."
+        ],
+        "title": "Sistem ve Veri Güvenliği Kontrolü"
+      },
+      {
+        "week": 4,
+        "tasks": [
+          "İş sürekliliği ve olay müdahale planlarınızı gözden geçirerek olası bir kesintiye veya saldırıya karşı hazırlığınızı teyit edin.",
+          "Siber güvenlik alanındaki yeni tehditler ve teknolojiler hakkında kısa bir araştırma yaparak gelecekteki ihtiyaçlarınızı belirleyin."
+        ],
+        "title": "Geleceğe Yönelik Hazırlık"
+      }
+    ],
+    "kvkk_penalty_min": 0,
+    "kvkk_penalty_max": 0,
+    "kvkk_risk_level": "Düşük",
+    "kvkk_risk_articles": [
+      "Md.12",
+      "Md.18"
+    ],
+    "kvkk_risk_summary": "Şirketinizin siber güvenlik önlemleri, kişisel verilerin korunması kanunu (KVKK) Madde 12'de belirtilen teknik ve idari tedbirleri eksiksiz olarak karşılamaktadır. Bu sayede, kişisel veri ihlali nedeniyle KVKK kapsamında idari para cezası alma riskiniz bulunmamaktadır ve müşteri güveniniz en üst düzeydedir.",
+    "sector_benchmark_percent": 98,
+    "sector_benchmark_comment": "Türkiye bilişim sektöründeki benzer büyüklükteki işletmelerin %98'inden daha iyi bir siber güvenlik duruşuna sahipsiniz.",
+    "verbis_required": true,
+    "verbis_risk_level": "Düşük",
+    "verbis_steps": [
+      "Mevcut VERBİS kaydınızdaki bilgilerin güncel ve eksiksiz olduğunu kontrol edin.",
+      "Veri işleme faaliyetlerinizde bir değişiklik olması durumunda VERBİS kaydınızı güncellemeyi unutmayın.",
+      "VERBİS kayıt yükümlülükleri ve güncellemeleri hakkında KVK Kurumu duyurularını takip edin."
+    ],
+    "insurance_readiness_percent": 95,
+    "insurance_gaps": [
+      "Siber sigorta poliçenizin detaylarını ve kapsamını düzenli olarak gözden geçirin.",
+      "Siber sigorta sağlayıcınızla olası yeni tehditlere karşı ek koruma seçeneklerini görüşün.",
+      "Siber sigorta poliçenizin, iş sürekliliği ve itibar kaybı gibi tüm potansiyel maliyetleri kapsadığından emin olun."
+    ],
+    "verified_at": null,
+    "verification_expires_at": null,
+    "verification_duration_years": null,
+    "certification_tier": 1,
+    "maturity_level": null,
+    "findings": [],
+    "expert_review_status": null,
+    "expert_reviewed_at": null,
+    "expert_notes": null,
+    "expert_reviewed_by": null,
+    "expert_badge_earned": false
+  },
+  {
+    "id": 5,
+    "assessment_id": 14,
+    "total_score": 155,
+    "max_score": 480,
+    "score_percent": 32,
+    "risk_level": "Yüksek",
+    "red_alarm_count": 13,
+    "red_alarm_questions": [
+      25,
+      27,
+      28,
+      30,
+      31,
+      32,
+      33,
+      36,
+      37,
+      42,
+      50,
+      55,
+      58
+    ],
+    "ai_analysis": "G3 Full Test firması için gerçekleştirilen bu kapsamlı siber güvenlik olgunluk analizi, 60 soruyu kapsayan değerlendirme sonucunda 480 üzerinden 155 puan elde edildiğini ve genel skor olarak yüzde 32'lik bir olgunluk seviyesine ulaşıldığını ortaya koymaktadır. Risk seviyesi 'Yüksek' olarak belirlenen firma için 13 alanda acil müdahale gerekmektedir. Bu sonuç, bilişim sektöründe faaliyet gösteren ve 11-50 çalışan aralığındaki bir işletme için son derece ciddi bir tablo ortaya koymaktadır; zira bilişim firmaları, hem doğrudan müşteri verisi işleme rolleri hem de tedarik zincirindeki konumları nedeniyle siber saldırganların öncelikli hedefleri arasında yer almaktadır.\n\nGüçlü yönler açısından bakıldığında, firmanın üç alanda dikkat çekici bir başarı sergilediği görülmektedir. Yönetişim ve Risk Yönetimi alanında tam puan olan yüzde 100, Kimlik ve Erişim Yönetimi'nde yüzde 100 ve E-posta ile Sosyal Mühendislik korumasında da yüzde 100 skoru elde edilmiştir. Bu durum, üst yönetimin siber güvenliği stratejik bir öncelik olarak benimsediğini, çalışanların e-posta kaynaklı sahte iletişimlere karşı bilinçlendirildiğini ve hesap erişimlerinin kontrollü biçimde yönetildiğini göstermektedir. Bu üç alan, birçok küçük ve orta ölçekli bilişim firmasında dahi ihmal edilen temel taşlardır; dolayısıyla mevcut yönetim kadrosunun doğru bir zihinsel çerçevede hareket ettiği söylenebilir.\n\nAncak tablo bunun ötesinde son derece endişe vericidir. Ağ Güvenliği, Veri Koruma ve Yedekleme, Yazılım ve Dijital Araç Güvenliği, Fiziksel Güvenlik, Tedarik Zinciri ve Üçüncü Taraf Yönetimi ile Olay Müdahalesi ve İş Sürekliliği alanlarının tamamı sıfır puan almıştır. Bu altı kritik alanın hiçbirinde yeterli koruyucu önlemin mevcut olmadığı anlaşılmaktadır. Cihaz ve Uç Nokta Güvenliği ise yüzde 38 ile ortalamanın oldukça altında kalmaktadır. Bu tablo, firmanın kağıt üzerinde doğru politikalara ve farkındalığa sahip olduğunu; ancak bu politikaların pratiğe yansıtılmadığını ve teknik altyapının büyük ölçüde korumasız bırakıldığını göstermektedir.\n\nAğ güvenliğinde tam puan olan sıfırın anlamı şudur: Firmanın internet bağlantısı, iç iletişim altyapısı ve sistemler arası veri akışı herhangi bir denetime veya koruma katmanına tabi değildir. Bu durum, bir saldırganın sisteme sızdıktan sonra tüm ağda serbestçe dolaşabilmesi ve değerli verilere kolayca ulaşabilmesi anlamına gelmektedir. Veri Koruma ve Yedekleme alanında da sıfır puan alınmış olması, müşteri verilerinin, proje dosyalarının ve iş süreçlerine ait kayıtların herhangi bir yedekleme düzeniyle korunmadığına işaret etmektedir. Bir fidye yazılımı saldırısı durumunda bu firma, tüm verilerini kaybetme ya da yüksek meblağlar ödeme riskiyle doğrudan yüz yüzedir.\n\nOlay Müdahalesi ve İş Sürekliliği alanında sıfır puan alınması ise belki de en tehlikeli sonuçtur. Herhangi bir siber saldırı, veri sızıntısı veya sistem kesintisi yaşandığında firmanın ne yapacağını bilmediği anlamına gelmektedir. Bilişim sektöründe müşterilere hizmet sunan bir firmanın bu durumu, hem kendi itibarı hem de müşterilerinin işleri açısından zincirleme hasara yol açabilir.\n\nKVKK açısından değerlendirildiğinde, firma Türk hukukunun kişisel verilerin korunmasına ilişkin yükümlülüklerini yerine getirememektedir. Veri güvenliği önlemlerinin yetersizliği ve olay müdahale mekanizmasının bulunmaması, bir veri ihlali gerçekleşmesi durumunda yasal yaptırım ve idari para cezasına doğrudan zemin hazırlamaktadır. Bilişim firmaları, Kişisel Veri İşleme Envanteri kapsamında VERBİS'e kayıt yükümlülüğü taşımakta olup bu yükümlülüğün yerine getirilmemesi ayrı bir hukuki risk unsurudur.\n\nSektöre özgü tehdit değerlendirmesi yapıldığında, bilişim firmalarının üç temel saldırı vektörüne özellikle maruz kaldığı görülmektedir. Birincisi, yazılım geliştirme veya destek süreçleri üzerinden müşteri sistemlerine sızmaya yönelik tedarik zinciri saldırılarıdır. İkincisi, müşteri verilerine erişim için kurumsal hesapların ele geçirilmesidir. Üçüncüsü ise geliştirme ortamlarının ve test sunucularının yetersiz güvenliği nedeniyle hassas verilerin açığa çıkmasıdır. G3 Full Test'in mevcut durumu, bu üç senaryonun hepsine karşı neredeyse tamamen savunmasız olduğunu göstermektedir.\n\nSonuç olarak, firmanın güçlü yönetişim yapısını ve farkındalık kültürünü pratiğe dönüştürmesi için acil ve sistematik adımlar atması gerekmektedir. Doğru temeller atılmış, ancak üzerine inşa edilmesi gereken yapı henüz tamamlanmamıştır. Bu rapor, işletmenizin siber güvenlik olgunluk yolculuğunda önemli bir mihenk taşıdır.",
+    "recommendations": [
+      "Ağ altyapısına derhal temel bir güvenlik duvarı ve erişim denetimi kurulumu yapın; bu adım diğer tüm önlemlerin zeminidir.",
+      "Tüm kritik iş verilerinin ve müşteri verilerinin otomatik günlük yedeğini farklı bir fiziksel veya çevrimiçi konumda saklayacak bir sistem kurun.",
+      "Saldırı anında kimin ne yapacağını tanımlayan tek sayfalık acil müdahale planını hazırlayın ve tüm çalışanlarla paylaşın.",
+      "Tüm çalışan cihazlarına merkezi olarak yönetilen ve güncel tutulan bir güvenlik yazılımı yükleyin.",
+      "Kullanılan tüm yazılım ve dijital araçların listelenmesini, güncel tutulmasını ve onaylı kaynaklardan edinilmesini zorunlu hale getirin.",
+      "VERBİS'e kayıt işlemini başlatın ve hangi kişisel verileri işlediğinizi, nerede sakladığınızı belgeleyen bir envanter oluşturun.",
+      "Düzenli veri veya sistem erişimi paylaştığınız tedarikçilerden temel güvenlik belgesi veya taahhütnamesi talep edin.",
+      "Ofis içindeki sunucu, yedekleme cihazı ve hassas belge alanlarına fiziksel erişimi kısıtlayan bir düzenleme yapın ve ziyaretçi takibi başlatın."
+    ],
+    "domain_scores": [
+      {
+        "score": 30,
+        "domain": "Yönetişim ve Risk Yönetimi",
+        "percent": 100,
+        "maxScore": 30
+      },
+      {
+        "score": 60,
+        "domain": "Kimlik ve Erişim Yönetimi",
+        "percent": 100,
+        "maxScore": 60
+      },
+      {
+        "score": 50,
+        "domain": "E-posta ve Sosyal Mühendislik",
+        "percent": 100,
+        "maxScore": 50
+      },
+      {
+        "score": 15,
+        "domain": "Cihaz ve Uç Nokta Güvenliği",
+        "percent": 38,
+        "maxScore": 40
+      },
+      {
+        "score": 0,
+        "domain": "Ağ Güvenliği",
+        "percent": 0,
+        "maxScore": 55
+      },
+      {
+        "score": 0,
+        "domain": "Veri Koruma ve Yedekleme",
+        "percent": 0,
+        "maxScore": 65
+      },
+      {
+        "score": 0,
+        "domain": "Yazılım, Dijital Araçlar ve Hesap Güvenliği",
+        "percent": 0,
+        "maxScore": 50
+      },
+      {
+        "score": 0,
+        "domain": "Fiziksel Güvenlik",
+        "percent": 0,
+        "maxScore": 40
+      },
+      {
+        "score": 0,
+        "domain": "Tedarik Zinciri ve Üçüncü Taraf Yönetimi",
+        "percent": 0,
+        "maxScore": 45
+      },
+      {
+        "score": 0,
+        "domain": "Olay Müdahalesi ve İş Sürekliliği",
+        "percent": 0,
+        "maxScore": 45
+      }
+    ],
+    "created_at": "2026-06-22T10:54:21.273Z",
+    "review_token": "f8aaa525-cd15-4792-b5eb-274b30d09a42",
+    "admin_notes": null,
+    "review_status": "pending_review",
+    "reviewed_at": null,
+    "verification_token": null,
+    "domain_scan_id": null,
+    "estimated_breach_cost_min": 250000,
+    "estimated_breach_cost_max": 1500000,
+    "risk_reduction_percent": 74,
+    "weekly_action_plan": [
+      {
+        "week": 1,
+        "tasks": [
+          "Saldırı anında kimin kimi arayacağını ve hangi adımların atılacağını tanımlayan tek sayfalık acil müdahale planını hazırlayın.",
+          "Firmada hangi sistemlerin, cihazların ve yazılımların kullanıldığını listeleyen temel bir envanter çıkarın.",
+          "Bu envanterde müşteri verisi barındıran veya işleyen sistemleri ayrıca işaretleyin."
+        ],
+        "title": "Hafta 1: Acil Durum Planı ve Envanter"
+      },
+      {
+        "week": 2,
+        "tasks": [
+          "Kritik iş verilerinin ve müşteri dosyalarının otomatik olarak her gün yedeklendiği bir sistem kurun veya temin edin.",
+          "Yedeğin farklı bir fiziksel konumda veya güvenilir bir çevrimiçi depolama alanında saklandığından emin olun.",
+          "İlk yedeklemenin başarılı şekilde tamamlandığını test ederek doğrulayın."
+        ],
+        "title": "Hafta 2: Veri Yedekleme Sisteminin Kurulumu"
+      },
+      {
+        "week": 3,
+        "tasks": [
+          "İnternet bağlantısı ile iç sistemler arasına temel bir güvenlik duvarı kurulumu için teknik destek alın.",
+          "Misafir Wi-Fi ile çalışan ağını birbirinden ayırın; aynı ağın paylaşılmasına son verin.",
+          "Uzaktan sisteme bağlanan çalışanlar için güvenli bağlantı yöntemi değerlendirmesi yapın."
+        ],
+        "title": "Hafta 3: Ağ Güvenliği Temelleri"
+      },
+      {
+        "week": 4,
+        "tasks": [
+          "Tüm çalışan cihazlarına merkezi yönetimli güvenlik yazılımı kurulumunu başlatın.",
+          "Tüm cihazlardaki işletim sistemi ve yazılım güncellemelerinin yapılıp yapılmadığını kontrol edin; eksikleri tamamlayın.",
+          "Kullanımda olan tüm yazılım lisanslarının geçerli ve onaylı kaynaklardan edinildiğini doğrulayın."
+        ],
+        "title": "Hafta 4: Cihaz ve Yazılım Güvenliği"
+      },
+      {
+        "week": 5,
+        "tasks": [
+          "Sunucu ve yedekleme cihazlarının bulunduğu alanları kilitli ve erişimi kısıtlı hale getirin.",
+          "Ofise gelen ziyaretçi ve dış çalışanların giriş-çıkış kaydını tutmaya başlayın.",
+          "Ekranlarda gizli bilgilerin görünmesini engellemek için ekran kilidi politikasını uygulamaya alın."
+        ],
+        "title": "Hafta 5: Fiziksel Güvenlik"
+      },
+      {
+        "week": 6,
+        "tasks": [
+          "Hangi kişisel verileri topladığınızı, nerede sakladığınızı ve kimlerle paylaştığınızı listeleyen kişisel veri envanteri hazırlayın.",
+          "VERBİS kayıt sürecini başlatmak için bir danışman veya hukuk müşaviri ile görüşün.",
+          "Müşteri ve çalışan verilerinin saklandığı sistemlere erişimin yalnızca yetkili kişilerle sınırlı olduğunu doğrulayın."
+        ],
+        "title": "Hafta 6: KVKK ve VERBİS Hazırlığı"
+      },
+      {
+        "week": 7,
+        "tasks": [
+          "Düzenli veri veya sistem erişimi paylaştığınız tüm tedarikçi ve iş ortaklarının listesini çıkarın.",
+          "Bu tedarikçilerden temel güvenlik uygulamalarına dair yazılı taahhüt veya sözleşme eki talep edin.",
+          "Artık çalışmadığınız ya da kullanmadığınız tedarikçi bağlantılarını ve sistem erişimlerini kapatın."
+        ],
+        "title": "Hafta 7: Tedarik Zinciri ve Üçüncü Taraf Değerlendirmesi"
+      },
+      {
+        "week": 8,
+        "tasks": [
+          "Yedekleme sisteminizi gerçek bir veri kurtarma testi ile doğrulayın; yedekten geri dönüşün çalıştığından emin olun.",
+          "Siber güvenlik sigortası teklifleri alın ve mevcut açıklarınızı kapatacak bir poliçe değerlendirmesi yapın.",
+          "Aylık gözden geçirme toplantısı takvimi oluşturun; güvenlik önlemlerinin uygulanma durumunu düzenli olarak takip edin."
+        ],
+        "title": "Hafta 8: Test, Sigorta ve Sürekli İzleme"
+      }
+    ],
+    "kvkk_penalty_min": 100000,
+    "kvkk_penalty_max": 500000,
+    "kvkk_risk_level": "Yüksek",
+    "kvkk_risk_articles": [
+      "Md.12",
+      "Md.18"
+    ],
+    "kvkk_risk_summary": "Veri Koruma ve Yedekleme, Ağ Güvenliği ve Olay Müdahalesi alanlarında sıfır puan alınmış olması, KVKK'nın 12. maddesi kapsamındaki 'kişisel verilerin güvenliğini sağlama' yükümlülüğünün karşılanmadığını açıkça ortaya koymaktadır. Bilişim sektöründe faaliyet gösteren ve müşteri verisi işleyen G3 Full Test, olası bir veri ihlali durumunda 18. madde kapsamında idari para cezasına muhatap olacaktır. VERBİS kayıt yükümlülüğünün yerine getirilmemesi de ayrı bir ihlal gerekçesi oluşturmakta; bu durumun bir veri sızıntısıyla eş zamanlı yaşanması ceza miktarını ve itibar kaybını önemli ölçüde artırmaktadır.",
+    "sector_benchmark_percent": 38,
+    "sector_benchmark_comment": "Bilişim sektöründe 11-50 çalışan büyüklüğündeki firmaların siber güvenlik olgunluk ortalaması yüzde 38 civarında seyretmektedir. G3 Full Test yüzde 32 ile bu ortalamanın altında kalmaktadır. Ancak yönetişim, kimlik yönetimi ve e-posta güvenliği alanlarındaki tam puanlar, firmanın belirli alanlarda sektörün ilerisinde olduğuna işaret etmektedir. Ağ, veri ve olay müdahalesi alanlarındaki sıfır puanlar genel skoru aşağıya çektiğinden, bu açıkların kapatılmasıyla sektör ortalamasının belirgin biçimde üzerine çıkılması mümkündür.",
+    "verbis_required": true,
+    "verbis_risk_level": "Yüksek",
+    "verbis_steps": [
+      "Firmada hangi kişisel verilerin toplandığını ve işlendiğini belirlemek için tüm departmanlarla kısa bir bilgi toplama çalışması yapın.",
+      "Kişisel veri kategorilerini, işleme amaçlarını ve saklama sürelerini içeren veri envanterini hazırlayın.",
+      "VERBİS sistemine kayıt için bir veri sorumlusu belirleyin ve kurul.gov.tr üzerinden başvuruyu başlatın.",
+      "Kayıt tamamlandıktan sonra envanterin yıllık olarak güncellenmesini ve değişikliklerin sisteme yansıtılmasını sağlayacak bir süreç belirleyin."
+    ],
+    "insurance_readiness_percent": 25,
+    "insurance_gaps": [
+      "Veri yedekleme ve kurtarma sistemi mevcut değil; sigortacılar temel bir yedekleme düzeni olmaksızın poliçe teklif etmeyebilir veya prim maliyeti çok yüksek olabilir.",
+      "Olay müdahale planı bulunmadığından saldırı sonrasında hasarın ne kadar sürede kontrol altına alınacağı belirsiz; bu durum sigorta tazminat süreçlerini olumsuz etkiler.",
+      "Ağ güvenliği ve sistemlere erişim kontrolüne ilişkin teknik belgeler eksik; siber sigorta poliçesi için genellikle bu belgeler talep edilmektedir.",
+      "KVKK uyum durumu belgelenmiş değil; veri ihlali teminatı içeren poliçelerde yasal uyum kanıtı standart bir gereklilik olarak aranmaktadır."
+    ],
+    "verified_at": null,
+    "verification_expires_at": null,
+    "verification_duration_years": null,
+    "certification_tier": 1,
+    "maturity_level": "Gelişmekte (Seviye 2)",
+    "findings": [
+      {
+        "title": "Yönetim Çerçevesi Güçlü, Uygulama Takibi Gerekiyor",
+        "domain": "Yönetişim ve Risk Yönetimi",
+        "severity": "Düşük",
+        "description": "Firma bu alanda tam puan almıştır; yazılı politikalar, risk farkındalığı ve yönetim taahhüdü mevcuttur. Ancak diğer alanlardaki sıfır puanlar, politikaların kağıt üzerinde kaldığını ve operasyonel uygulamaya tam olarak yansımadığını düşündürmektedir. Bu tutarsızlık, yönetim-uygulama kopukluğuna işaret etmektedir.",
+        "recommendation": "Her politikanın hayata geçirilip geçirilmediğini aylık olarak kontrol eden basit bir takip listesi oluşturun ve sorumlu kişileri belirleyin."
+      },
+      {
+        "title": "Erişim Kontrolü Sağlam Temelde",
+        "domain": "Kimlik ve Erişim Yönetimi",
+        "severity": "Düşük",
+        "description": "Bu alan tam puan almıştır; çalışanların sistemlere erişimi kontrollü biçimde yönetilmekte, ayrıcalıklı hesaplar denetim altında tutulmaktadır. Bu durum, olası bir saldırıda hasarın yayılmasını kısıtlayan önemli bir koruyucu katman sağlamaktadır. Ancak diğer alanlardaki açıklar bu başarıyı değersizleştirme riski taşımaktadır.",
+        "recommendation": "Her altı ayda bir çalışanların hangi sistemlere erişimi olduğunu gözden geçirin ve ayrılan çalışanların erişimlerinin derhal kapatıldığını doğrulayın."
+      },
+      {
+        "title": "Sahte İletişim Farkındalığı Yüksek",
+        "domain": "E-posta ve Sosyal Mühendislik",
+        "severity": "Düşük",
+        "description": "Çalışanlar sahte e-posta ve manipülasyon girişimlerine karşı bilinçli olup bu alanda tam puan elde edilmiştir. Bilişim sektöründe sosyal mühendislik saldırıları son derece yaygın olduğundan bu başarı özellikle değerlidir. Farkındalığın sürekli canlı tutulması, uzun vadede bu alandaki koruma kalitesini belirleyecektir.",
+        "recommendation": "Yılda en az iki kez simüle edilmiş sahte e-posta tatbikatı düzenleyerek farkındalığı ölçün ve güncel tutun."
+      },
+      {
+        "title": "Çalışan Cihazları Yeterince Korunmuyor",
+        "domain": "Cihaz ve Uç Nokta Güvenliği",
+        "severity": "Yüksek",
+        "description": "Bu alan yalnızca yüzde 38 puan almış olup çalışanların kullandığı bilgisayar ve mobil cihazların büyük çoğunluğu yetersiz güvenlik önlemleriyle kullanılmaktadır. Bilişim firmalarında geliştirme araçları ve müşteri bağlantıları bu cihazlar üzerinden yürütüldüğünden, tek bir güvenliği ihlal edilmiş cihaz tüm firma altyapısına kapı aralayabilir. Bu açık, özellikle uzaktan çalışma düzenlerinde kat kat daha tehlikeli bir hal almaktadır.",
+        "recommendation": "Tüm şirket cihazlarına merkezi olarak yönetilebilen ve güncel tutulan bir uç nokta koruma yazılımı kurulumunu bu hafta başlatın."
+      },
+      {
+        "title": "İnternet Altyapısı Tamamen Açık",
+        "domain": "Ağ Güvenliği",
+        "severity": "Kritik",
+        "description": "Ağ güvenliği alanında sıfır puan alınması, firmanın internet altyapısının, iç sistemleri arasındaki veri trafiğinin ve dışarıdan erişim noktalarının herhangi bir denetim ya da koruma mekanizmasından yoksun olduğu anlamına gelmektedir. Bir saldırgan sisteme bir kez girdiğinde tüm ağda serbestçe dolaşabilir; müşteri verileri, proje dosyaları ve finansal kayıtlar toptan risk altına girer. Bilişim sektöründe bu boşluk, sektör ortalamasının çok altında bir güvenlik profili oluşturmaktadır.",
+        "recommendation": "İnternet bağlantısı ile iç sistemler arasına temel bir güvenlik duvarı kurulumunu ve ağ bölümlendirmesini en kısa sürede gerçekleştirin."
+      },
+      {
+        "title": "Müşteri ve İş Verileri Yedeksiz ve Korumasız",
+        "domain": "Veri Koruma ve Yedekleme",
+        "severity": "Kritik",
+        "description": "Bu alanda sıfır puan alınması, firmanın müşteri verilerinin, proje dosyalarının ve iş kayıtlarının herhangi bir yedekleme sistemiyle güvence altına alınmadığını göstermektedir. Fidye yazılımı saldırısı veya teknik bir arıza durumunda tüm veriler kalıcı olarak kaybolabilir; bu durum hem müşterilere verilen hizmetin sona ermesine hem de ağır hukuki yaptırımlara yol açar. Bilişim firmalarında veri kaybı yalnızca kendi iş sürekliliğini değil, müşterilerin iş sürekliliğini de doğrudan tehdit eden zincirleme bir kriz başlatır.",
+        "recommendation": "Kritik iş verilerinin otomatik olarak her gün kopyalandığı ve farklı bir konumda saklandığı basit bir yedekleme düzeni bu hafta içinde kurulmaya başlanmalıdır."
+      },
+      {
+        "title": "Kullanılan Yazılım ve Araçlar Denetimsiz",
+        "domain": "Yazılım, Dijital Araçlar ve Hesap Güvenliği",
+        "severity": "Kritik",
+        "description": "Sıfır puan, firmanın kullandığı yazılımların, bulut araçlarının ve üçüncü taraf uygulamaların güvenlik açısından herhangi bir denetimden geçmediğini ortaya koymaktadır. Güncel tutulmayan ya da güvenilmeyen kaynaklardan indirilen yazılımlar, saldırganların en sık kullandığı giriş kapılarından biridir. Bilişim firmaları doğası gereği çok sayıda dijital araç kullandığından bu risk katlanarak büyümektedir.",
+        "recommendation": "Firma genelinde kullanılan tüm yazılım ve dijital araçların güncel sürümlerde olduğunu ve onaylı kaynaklardan edinildiğini doğrulayan bir liste oluşturun."
+      },
+      {
+        "title": "Ofis ve Ekipmanlara Fiziksel Erişim Kontrolsüz",
+        "domain": "Fiziksel Güvenlik",
+        "severity": "Yüksek",
+        "description": "Bu alanda sıfır puan alınması, sunucuların, çalışma istasyonlarının ve hassas belgeler içeren alanların fiziksel erişime karşı korunmadığını göstermektedir. Yetkisiz bir kişinin ofis ortamına fiziksel olarak erişmesi, dijital saldırılardan çok daha hızlı ve kalıcı hasara yol açabilir; cihazlar çalınabilir veya doğrudan müdahaleyle veriler kopyalanabilir. Özellikle müşteri ziyaretleri veya dış kaynak çalışanlarının ofise girişi bu riski artırmaktadır.",
+        "recommendation": "Sunucu odası ve hassas ekipman alanlarına erişimi kısıtlamak için kilitli dolap veya kapı uygulamasını başlatın ve ziyaretçi giriş kaydı tutun."
+      },
+      {
+        "title": "Dış Firma ve Tedarikçi Riskleri Değerlendirilmiyor",
+        "domain": "Tedarik Zinciri ve Üçüncü Taraf Yönetimi",
+        "severity": "Kritik",
+        "description": "Sıfır puan, firmanın çalıştığı tedarikçilerin, alt yüklenicilerin ve dış yazılım sağlayıcılarının siber güvenlik durumunun hiç sorgulanmadığını ortaya koymaktadır. Bilişim sektöründe tedarik zinciri saldırıları giderek artan bir tehdit oluşturmakta; güvenilir görünen bir tedarikçi üzerinden firmanın tüm sistemlerine sızılabilmektedir. Bir tedarikçi kaynaklı veri ihlalinde yasal ve finansal sorumluluk yine firmaya ait olmaktadır.",
+        "recommendation": "Düzenli olarak veri paylaştığınız veya sistem erişimi verdiğiniz tüm tedarikçilerin temel güvenlik gereksinimlerini karşılayıp karşılamadığını sorgulayan basit bir değerlendirme formu hazırlayın."
+      },
+      {
+        "title": "Saldırı Anında Firma Ne Yapacağını Bilmiyor",
+        "domain": "Olay Müdahalesi ve İş Sürekliliği",
+        "severity": "Kritik",
+        "description": "Bu alanda sıfır puan alınması, herhangi bir siber saldırı, veri sızıntısı veya sistem kesintisi yaşandığında firmanın müdahale planının bulunmadığını göstermektedir. Plansız müdahale, saldırının etkisini saatlerden haftalara uzatır ve hem müşterilere hem de kurumsal itibara onarılması güç zararlar verir. Bilişim sektöründe müşterilerin firmaya olan güveni, kriz anında nasıl hareket edildiğiyle doğrudan bağlantılıdır.",
+        "recommendation": "En basit haliyle, bir saldırı anında kimin kimi arayacağını, hangi sistemlerin kapatılacağını ve müşterilere nasıl bilgi verileceğini tanımlayan tek sayfalık bir acil durum planı bu hafta hazırlanmalıdır."
+      }
+    ],
+    "expert_review_status": null,
+    "expert_reviewed_at": null,
+    "expert_notes": null,
+    "expert_reviewed_by": null,
+    "expert_badge_earned": false
+  }
+]

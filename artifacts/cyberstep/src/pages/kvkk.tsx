@@ -32,7 +32,7 @@ const WEB_SCRAPING_NOTICE = {
       },
       {
         heading: "Başvuru",
-        body: "Taleplerinizi kvkk@cyberstep.io adresine iletebilirsiniz. Başvurunuz en kısa sürede ve her hâlükârda yasal süreler içinde sonuçlandırılacaktır.",
+        body: "Taleplerinizi info@cyberstep.io adresine iletebilirsiniz. Başvurunuz en kısa sürede ve her hâlükârda yasal süreler içinde sonuçlandırılacaktır.",
       },
     ],
   },
@@ -63,7 +63,7 @@ const WEB_SCRAPING_NOTICE = {
       },
       {
         heading: "Requests",
-        body: "Please send your requests to kvkk@cyberstep.io. Your request will be resolved as soon as possible and within the statutory timeframes.",
+        body: "Please send your requests to info@cyberstep.io. Your request will be resolved as soon as possible and within the statutory timeframes.",
       },
     ],
   },
@@ -181,11 +181,11 @@ export default function Kvkk() {
             {/* E-posta bağlantısı */}
             <div className="pt-2 border-t border-border">
               <a
-                href="mailto:kvkk@cyberstep.io"
+                href="mailto:info@cyberstep.io"
                 className="inline-flex items-center gap-2 text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
               >
                 <Mail className="h-4 w-4" />
-                kvkk@cyberstep.io
+                info@cyberstep.io
               </a>
             </div>
           </div>
