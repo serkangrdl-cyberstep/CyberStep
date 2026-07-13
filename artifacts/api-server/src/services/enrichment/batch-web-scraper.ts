@@ -114,8 +114,13 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
               -- Coğrafya: web scrape (ücretsiz regex) > mevcut değer
               city                   = COALESCE(city, ${result.city}),
 
-              -- Sektör: web scrape bulursa haiku adımına gerek yok
+              -- Sektör: mevcut (Haiku) veri varsa koru, sadece boşları doldur
               sector                 = COALESCE(sector, ${result.sector}),
+              sector_confidence      = CASE
+                WHEN sector IS NULL AND ${result.sector} IS NOT NULL
+                  THEN ${result.sectorConfidence !== null ? String(result.sectorConfidence) : null}
+                ELSE sector_confidence
+              END,
               enrichment_status      = CASE
                 WHEN sector IS NULL AND ${result.sector} IS NOT NULL THEN 'enriched'
                 ELSE enrichment_status

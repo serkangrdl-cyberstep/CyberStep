@@ -57,6 +57,7 @@ export interface WebScrapeResult {
   // Ücretsiz regex tespiti
   city: string | null;
   sector: string | null;
+  sectorConfidence: number | null;
   // Meta
   sourceUrl: string;
 }
@@ -252,124 +253,179 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-// ─── Ücretsiz Sektör Tespiti ─────────────────────────────────────────────────
-// Her sektör için anahtar kelimeler — metin içinde kaç tane eşleşirse o kadar puan alır.
-// En yüksek puanlı sektör seçilir (min 2 eşleşme şartı).
+// ─── Ağırlıklı Sektör Tespiti ─────────────────────────────────────────────────
+// Ağırlık: 3 = ayırt edici (sektöre özgü), 2 = orta, 1 = generic/zayıf sinyal
+// Eşik: topScore >= 3 VE birinci-ikinci arası >= 2 (aksi hâlde belirsiz → null)
+// Yanlış etiket, boş etiketten daha zararlı — tie → null.
 
-const SECTOR_KEYWORDS: Record<string, string[]> = {
+const SECTOR_KEYWORDS: Record<string, Array<[RegExp, number]>> = {
   "Teknoloji & Yazılım": [
-    "yazılım", "bilişim", "siber güvenlik", "siber", "cloud", "bulut",
-    "uygulama", "platform", "saas", "erp", "crm", "hosting", "sunucu",
-    "veri merkezi", "dijital dönüşüm", "otomasyon", "yapay zeka", "ai",
-    "network", "altyapı", "entegrasyon", "api",
+    [/\byazılım\b/i, 3],        [/\bbilişim\b/i, 3],
+    [/\bsiber güvenlik\b/i, 3], [/\bsiber\b/i, 2],
+    [/\bveri merkezi\b/i, 3],   [/\bbulut\b/i, 2],
+    [/\bsaas\b/i, 3],           [/\berp\b/i, 3],
+    [/\bcrm\b/i, 2],            [/\bhosting\b/i, 2],
+    [/\bentegrasyon\b/i, 2],    [/\bdijital dönüşüm\b/i, 2],
+    [/\botomasyon\b/i, 2],      [/\byapay zeka\b/i, 2],
+    [/\bteknoloji\b/i, 1],      [/\bapi\b/i, 1],
+    [/\bplatform\b/i, 1],       [/\baltyapı\b/i, 1],
   ],
   "E-ticaret & Perakende": [
-    "e-ticaret", "e ticaret", "mağaza", "alışveriş", "sepete ekle",
-    "sepetim", "ürün kataloğu", "kargo", "teslimat", "indirim",
-    "online satış", "b2c", "trendyol", "n11", "hepsiburada",
+    [/\bsepete ekle\b/i, 3],    [/\be[- ]ticaret\b/i, 3],
+    [/\bonline (mağaza|satış)\b/i, 3],
+    [/\bmağaza\b/i, 2],         [/\balışveriş\b/i, 2],
+    [/\bürün kataloğ/i, 2],     [/\bsepetim\b/i, 2],
+    [/\bindirim\b/i, 1],        [/\bteslimat\b/i, 1],
+    [/\bkargo\b/i, 1],          [/\bstok\b/i, 1],
   ],
   "Finans & Bankacılık": [
-    "banka", "bankacılık", "finans", "finansal", "sigorta",
-    "kredi", "leasing", "faktoring", "yatırım", "borsa",
-    "fon", "portföy", "muhasebe", "ödeme sistemi", "pos",
+    [/\bbankacılık\b/i, 3],     [/\bfaktoring\b/i, 3],
+    [/\bleasing\b/i, 3],        [/\bportföy\b/i, 3],
+    [/\bvarlık yönetim/i, 3],   [/\bbes\b/i, 2],
+    [/\bsigorta\b/i, 2],        [/\bkredi\b/i, 2],
+    [/\byatırım\b/i, 2],        [/\bborsa\b/i, 2],
+    [/\bfinans\b/i, 1],         [/\bödeme\b/i, 1],
+    [/\bpos\b/i, 1],
   ],
   "Sağlık & Klinik": [
-    "hastane", "klinik", "sağlık", "tıp", "doktor", "hekim",
-    "eczane", "ilaç", "ameliyat", "poliklinik", "diş", "dental",
-    "diyaliz", "röntgen", "mri", "laboratuvar", "hasta",
+    [/\bhastane\b/i, 3],        [/\bpoliklinik\b/i, 3],
+    [/\beczane\b/i, 3],         [/\btıp merkezi\b/i, 3],
+    [/\bcerrahi\b/i, 3],        [/\bdiş\b/i, 2],
+    [/\bdental\b/i, 2],         [/\bklinik\b/i, 2],
+    [/\bmedikal\b/i, 2],        [/\blaboratuvar\b/i, 2],
+    [/\bsağlık\b/i, 1],         [/\bdoktor\b/i, 1],
+    [/\bilaç\b/i, 1],           [/\bhasta\b/i, 1],
   ],
   "Eğitim & Üniversite": [
-    "okul", "üniversite", "eğitim", "kurs", "sertifika",
-    "öğrenci", "öğretmen", "akademi", "kolej", "dershane",
-    "mba", "lisans", "yüksek lisans", "öğretim",
+    [/\büniversite\b/i, 3],     [/\bkolej\b/i, 3],
+    [/\beğitim kurum/i, 3],     [/\bsertifika program/i, 3],
+    [/\bokul\b/i, 2],           [/\bakademi\b/i, 2],
+    [/\bdershane\b/i, 2],       [/\bmba\b/i, 2],
+    [/\bkurs\b/i, 1],           [/\böğrenci\b/i, 1],
+    [/\beğitim\b/i, 1],
   ],
   "İnşaat & Gayrimenkul": [
-    "inşaat", "yapı", "gayrimenkul", "emlak", "konut",
-    "villa", "daire", "proje geliştirme", "müteahhit", "tadilat",
-    "mimarlık", "mimari", "yapılaşma", "arsa", "rezidans",
+    [/\bmüteahhit\b/i, 3],      [/\binşaat\b/i, 3],
+    [/\bgayrimenkul\b/i, 3],    [/\bproje geliştir/i, 3],
+    [/\byapı market\b/i, 2],    [/\bemlak\b/i, 2],
+    [/\brezidans\b/i, 2],       [/\bmimarlık\b/i, 2],
+    [/\bkonut\b/i, 1],          [/\barsa\b/i, 1],
+    [/\bdaire\b/i, 1],
   ],
   "Üretim & Sanayi": [
-    "üretim", "sanayi", "fabrika", "imalat", "montaj",
-    "makine", "ekipman", "çelik", "metal", "plastik",
-    "ambalaj", "kalıp", "bant", "endüstriyel",
+    [/\büretim tesisi\b/i, 3],  [/\bfabrika\b/i, 3],
+    [/\bimalat\b/i, 3],         [/\bosb\b/i, 3],
+    [/\bendüstriyel\b/i, 2],    [/\bkontrol paneli\b/i, 2],
+    [/\bmakine\b/i, 2],         [/\bkalıp\b/i, 2],
+    [/\büretim\b/i, 1],         [/\bsanayi\b/i, 1],
+    [/\bmetal\b/i, 1],          [/\bçelik\b/i, 1],
   ],
   "Lojistik & Taşımacılık": [
-    "lojistik", "taşımacılık", "nakliye", "kargo", "liman",
-    "filo", "ulaştırma", "ithalat", "ihracat", "gümrük",
-    "depolama", "sevkiyat", "freight", "kurye",
+    [/\blojistik\b/i, 3],       [/\btaşımacılık\b/i, 3],
+    [/\bnakliye\b/i, 3],        [/\bgümrük\b/i, 3],
+    [/\bsevkiyat\b/i, 2],       [/\bfilo\b/i, 2],
+    [/\bdepolama\b/i, 2],       [/\bithalat\b/i, 2],
+    [/\bihracat\b/i, 2],        [/\bkurye\b/i, 2],
+    [/\bkargo\b/i, 1],
   ],
   "Turizm & Otelcilik": [
-    "otel", "turizm", "tatil", "rezervasyon", "tur",
-    "seyahat", "konaklama", "spa", "resort", "pansiyon",
-    "apart", "villa kiralama", "incoming",
+    [/\botel\b/i, 3],           [/\bresort\b/i, 3],
+    [/\brezervasyon\b/i, 3],    [/\bkonaklama\b/i, 3],
+    [/\bincoming\b/i, 3],       [/\btur (operat|şirket)/i, 3],
+    [/\bseyahat\b/i, 2],        [/\bpansiyon\b/i, 2],
+    [/\bspa\b/i, 2],            [/\btur\b/i, 1],
+    [/\btatil\b/i, 1],
   ],
   "Medya & Yayıncılık": [
-    "medya", "yayın", "gazete", "dergi", "haber",
-    "televizyon", "radyo", "dijital medya", "reklam ajansı",
-    "içerik", "prodüksiyon", "reklam",
+    [/\breklam ajans/i, 3],     [/\bdijital ajans\b/i, 3],
+    [/\bgözete\b/i, 3],         [/\byayıncılık\b/i, 3],
+    [/\bprodüksiyon\b/i, 2],    [/\bdijital medya\b/i, 2],
+    [/\bhaber ajans/i, 2],      [/\bdergi\b/i, 2],
+    [/\breklam\b/i, 1],         [/\biçerik\b/i, 1],
+    [/\bmedya\b/i, 1],
   ],
   "Hukuk & Danışmanlık": [
-    "hukuk", "avukat", "avukatlık", "danışmanlık", "mali müşavir",
-    "denetim", "vergi", "noter", "yönetim danışmanlığı",
-    "muhasebe", "audit", "hukuki",
+    [/\bavukat(lık)?\b/i, 3],   [/\bhukuk büro/i, 3],
+    [/\bmali müşavir\b/i, 3],   [/\byönetim danışman/i, 3],
+    [/\bdenetim\b/i, 2],        [/\bvergi danışman/i, 2],
+    [/\bnotes?\b/i, 2],         [/\baudit\b/i, 2],
+    [/\bhukuk\b/i, 1],          [/\bdanışmanlık\b/i, 1],
+    [/\bmuhasebe\b/i, 1],
   ],
   "Kamu & Belediye": [
-    "belediye", "kamu", "bakanlık", "müdürlük",
-    "vakıf", "dernek", "kurum", "büyükşehir", "ilçe",
-    "enstitü", "ajans", "oda ", "birlik",
+    [/\bbelediye\b/i, 3],       [/\bbüyükşehir\b/i, 3],
+    [/\bbakanlık\b/i, 3],       [/\bkamu kurumu\b/i, 3],
+    [/\bmüdürlük\b/i, 2],       [/\bilçe\b/i, 2],
+    [/\bvakıf\b/i, 2],          [/\benstitü\b/i, 2],
+    [/\bdernek\b/i, 1],         [/\bkamu\b/i, 1],
   ],
   "Enerji & Madencilik": [
-    "enerji", "elektrik üretim", "doğalgaz", "güneş enerjisi",
-    "rüzgar", "maden", "petrol", "yenilenebilir", "santral",
-    "jeotermal", "hidroelektrik",
+    [/\bgüneş enerjisi\b/i, 3], [/\bjeotermal\b/i, 3],
+    [/\bhidroelektrik\b/i, 3],  [/\bdoğalgaz\b/i, 3],
+    [/\bmaden\b/i, 3],          [/\bsantral\b/i, 3],
+    [/\byenilenebilir enerji\b/i, 3],
+    [/\bpetrol\b/i, 2],         [/\brüzgar\b/i, 2],
+    [/\benerji\b/i, 1],
   ],
   "Tekstil & Moda": [
-    "tekstil", "moda", "giyim", "konfeksiyon", "kumaş",
-    "iplik", "dikiş", "hazır giyim", "tasarım evi",
-    "butik", "koleksiyon", "sezon",
+    [/\btekstil\b/i, 3],        [/\bkonfeksiyon\b/i, 3],
+    [/\biplik\b/i, 3],          [/\bkumaş\b/i, 3],
+    [/\bhazır giyim\b/i, 3],    [/\bmoda (tasarım|evi)/i, 3],
+    [/\bgiyim\b/i, 2],          [/\bmoda\b/i, 1],
+    [/\bkoleksiyon\b/i, 1],
   ],
   "Gıda & Restoran": [
-    "gıda", "yiyecek", "içecek", "restoran", "cafe",
-    "fırın", "lokanta", "catering", "yemek", "market",
-    "süpermarket", "organik", "gurme",
+    [/\bgıda (üretim|şirket|holding)/i, 3],
+    [/\bcatering\b/i, 3],       [/\brestoran\b/i, 2],
+    [/\bet ürünleri\b/i, 3],    [/\bsüt ürünleri\b/i, 3],
+    [/\bfırın\b/i, 2],          [/\biçecek\b/i, 2],
+    [/\bgıda\b/i, 1],           [/\byemek\b/i, 1],
   ],
   "Otomotiv": [
-    "otomotiv", "araç", "otomobil", "araba", "galeri",
-    "yetkili servis", "yedek parça", "lastik", "oto ",
-    "filo kiralama", "oto kiralama",
+    [/\byetkili servis\b/i, 3], [/\botomotiv\b/i, 3],
+    [/\byedek parça\b/i, 3],    [/\bfilo kiralama\b/i, 3],
+    [/\bgaleri\b/i, 2],         [/\blastik\b/i, 2],
+    [/\boto servis\b/i, 2],     [/\baraç kiralama\b/i, 2],
+    [/\botomobil\b/i, 1],       [/\baraba\b/i, 1],
   ],
   "Tarım": [
-    "tarım", "hayvancılık", "zirai", "tohum", "gübre",
-    "sulama", "çiftlik", "tarımsal", "zirai ilaç",
-    "sera", "organik tarım",
+    [/\bzirai\b/i, 3],          [/\bhayvancılık\b/i, 3],
+    [/\btohum\b/i, 3],          [/\bgübre\b/i, 3],
+    [/\borganik tarım\b/i, 3],  [/\bsera\b/i, 2],
+    [/\bsulama sistem/i, 2],    [/\bçiftlik\b/i, 2],
+    [/\btarımsal\b/i, 2],       [/\btarım\b/i, 1],
   ],
 };
 
-// Min puan = 2 eşleşme (false positive baskılar)
-const SECTOR_MIN_SCORE = 2;
+// Eşik: topScore >= 3 VE birinci-ikinci arasındaki fark >= 2
+// Beraberlik veya düşük skor → null (yanlış etiket boş etiketten zararlı)
+const SECTOR_MIN_SCORE = 3;
+const SECTOR_MIN_GAP   = 2;
 
-function detectSectorFromText(text: string): string | null {
-  if (!text || text.length < 50) return null;
-  const lower = text.toLowerCase();
+function detectSector(text: string): { sector: string | null; confidence: number } {
+  if (!text || text.length < 50) return { sector: null, confidence: 0 };
 
-  let bestSector: string | null = null;
-  let bestScore = 0;
-
-  for (const [sector, keywords] of Object.entries(SECTOR_KEYWORDS)) {
+  const scores: Record<string, number> = {};
+  for (const [sector, patterns] of Object.entries(SECTOR_KEYWORDS)) {
     let score = 0;
-    for (const kw of keywords) {
-      if (lower.includes(kw)) score++;
+    for (const [pattern, weight] of patterns) {
+      if (pattern.test(text)) score += weight;
     }
-    if (score > bestScore) {
-      bestScore = score;
-      bestSector = sector;
-    }
+    if (score > 0) scores[sector] = score;
   }
 
-  if (bestScore < SECTOR_MIN_SCORE) return null;
+  const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  if (ranked.length === 0) return { sector: null, confidence: 0 };
 
-  // SECTOR_LIST'teki formatla eşleşiyor mu doğrula
-  return SECTOR_LIST.includes(bestSector ?? "") ? bestSector : null;
+  const [topSector, topScore] = ranked[0];
+  const secondScore = ranked[1]?.[1] ?? 0;
+
+  if (topScore < SECTOR_MIN_SCORE || topScore - secondScore < SECTOR_MIN_GAP) {
+    return { sector: null, confidence: topScore };
+  }
+  // SECTOR_LIST doğrulaması
+  const canonicalSector = SECTOR_LIST.includes(topSector) ? topSector : null;
+  return { sector: canonicalSector, confidence: topScore };
 }
 
 // ─── Ücretsiz Şehir Tespiti ───────────────────────────────────────────────────
@@ -441,10 +497,10 @@ export async function scrapeDomain(
   const combinedText = [contactText, aboutText, address].filter(Boolean).join(" ");
   const sectorText = [metaDesc, title, contactText, aboutText].filter(Boolean).join(" ");
   const city = detectCityFromText(combinedText);
-  const sector = detectSectorFromText(sectorText);
+  const { sector, confidence: sectorConfidence } = detectSector(sectorText);
 
   // ─── Sonuç birleştirme ────────────────────────────────────────────────────
-  logger.debug({ domain: base, city, sector, email, phone: !!phone, cms: cmsDetected }, "web-scraper: tamamlandı");
+  logger.debug({ domain: base, city, sector, sectorConfidence, email, phone: !!phone, cms: cmsDetected }, "web-scraper: tamamlandı");
 
   return {
     phone,
@@ -461,6 +517,7 @@ export async function scrapeDomain(
     instagramUrl,
     city,
     sector,
+    sectorConfidence: sectorConfidence > 0 ? sectorConfidence : null,
     sourceUrl,
   };
 }
