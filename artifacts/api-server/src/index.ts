@@ -1920,9 +1920,10 @@ async function startup() {
   // Startup cleanup: is_alive=FALSE domainleri web scrape kuyruğundan çıkar
   setImmediate(async () => {
     try {
-      const { markDeadDomainsNoData } = await import("./services/enrichment/batch-web-scraper");
+      const { markDeadDomainsNoData, resetStaleInProgress } = await import("./services/enrichment/batch-web-scraper");
       const n = await markDeadDomainsNoData();
       if (n > 0) logger.info({ n }, "Web scrape: ölü domainler 'no_data' işaretlendi");
+      await resetStaleInProgress(); // crash/restart sonrası in_progress satırları temizle
     } catch (err) {
       logger.warn({ err }, "Web scrape startup cleanup hatası");
     }

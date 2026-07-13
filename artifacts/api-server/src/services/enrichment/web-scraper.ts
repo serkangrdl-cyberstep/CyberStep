@@ -34,13 +34,14 @@ const ABOUT_PATHS = [
 const KVKK_PATHS = ["/kvkk", "/gizlilik", "/privacy", "/kvkk.html", "/gizlilik.html"];
 const CAREER_PATHS = ["/kariyer", "/jobs", "/is-ilanlari", "/kariyer.html", "/jobs.html", "/ik/"];
 
-// ─── Sonuç tipi ──────────────────────────────────────────────────────────────
+// ─── Sonuç tipleri ───────────────────────────────────────────────────────────
 
 export interface WebScrapeResult {
   // İletişim
   phone: string | null;
   address: string | null;
   email: string | null;
+  emailDomain: string | null; // @gmail.com = küçük/olgunlaşmamış işletme sinyali
   // Şirket Profili
   companyName: string | null;
   foundedYear: number | null;
@@ -62,11 +63,39 @@ export interface WebScrapeResult {
   sourceUrl: string;
 }
 
+/** scrapeDomain() her zaman bu tipi döner — httpStatus domain erişilemese de dolu olabilir. */
+export interface ScrapeOutcome {
+  httpStatus: number | null;
+  data: WebScrapeResult | null;
+}
+
 // ─── HTTP Yardımcıları ────────────────────────────────────────────────────────
 
-const BOT_UA = "Mozilla/5.0 (compatible; CyberStep/1.0; +https://cyberstep.io/bot)";
+const BOT_UA = "Mozilla/5.0 (compatible; CyberStep-Bot/1.0; +https://cyberstep.io/bot)";
 
-async function fetchHtml(url: string): Promise<string | null> {
+interface PageResult {
+  html: string | null;
+  status: number | null;
+}
+
+/**
+ * Content-Type başlığından charset tespit eder.
+ * Türk sitelerin kullandığı windows-1254 / iso-8859-9'u yakalar.
+ * Node.js native TextDecoder bu charset'leri destekler, ekstra paket gerekmez.
+ */
+function detectCharset(contentType: string | null): string {
+  if (!contentType) return "utf-8";
+  const m = contentType.match(/charset\s*=\s*([^\s;,'"]+)/i);
+  if (!m) return "utf-8";
+  const cs = m[1].toLowerCase();
+  if (cs === "iso-8859-9" || cs === "windows-1254" || cs === "cp1254" || cs === "latin-5") {
+    return "windows-1254";
+  }
+  if (cs === "iso-8859-1" || cs === "latin-1") return "iso-8859-1";
+  return "utf-8";
+}
+
+async function fetchPage(url: string): Promise<PageResult> {
   try {
     const res = await fetch(url, {
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
@@ -75,17 +104,20 @@ async function fetchHtml(url: string): Promise<string | null> {
         "Accept": "text/html,application/xhtml+xml",
         "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.8",
         "Accept-Encoding": "gzip, deflate",
+        "Cache-Control": "no-cache",
       },
       redirect: "follow",
     });
-    if (!res.ok) return null;
+    const status = res.status;
     const ct = res.headers.get("content-type") ?? "";
-    if (!ct.includes("text/html") && !ct.includes("text/plain")) return null;
+    if (!ct.includes("text/html") && !ct.includes("text/plain")) return { html: null, status };
     const buf = await res.arrayBuffer();
     const slice = buf.byteLength > MAX_HTML_BYTES ? buf.slice(0, MAX_HTML_BYTES) : buf;
-    return new TextDecoder("utf-8", { fatal: false }).decode(slice);
+    const charset = detectCharset(ct);
+    const html = new TextDecoder(charset, { fatal: false }).decode(slice);
+    return { html, status };
   } catch {
-    return null;
+    return { html: null, status: null };
   }
 }
 
@@ -108,10 +140,34 @@ async function fetchFirstMatch(
   paths: string[],
 ): Promise<{ url: string; html: string } | null> {
   for (const p of paths) {
-    const html = await fetchHtml(`https://${base}${p}`);
+    const { html } = await fetchPage(`https://${base}${p}`);
     if (html && html.length > 200) return { url: `https://${base}${p}`, html };
   }
   return null;
+}
+
+/**
+ * www/non-www kanonikalleştirme + fallback.
+ * Önce bare domain'i dener, başarısız olursa www. önekiyle tekrar dener.
+ * Çoğu Türk sitesi hem www hem bare'de çalışıyor ama bazıları sadece birinde.
+ * Dönen `base` tüm alt sayfalar için referans alınacak — aynı firmayı iki kez
+ * saymamak için kanonik form buradan belirlenir.
+ */
+async function tryHomepage(domain: string): Promise<PageResult & { base: string }> {
+  const bare = domain.replace(/^www\./i, "").toLowerCase();
+
+  const bareResult = await fetchPage(`https://${bare}/`);
+  if (bareResult.html) return { ...bareResult, base: bare };
+
+  const wwwResult = await fetchPage(`https://www.${bare}/`);
+  if (wwwResult.html) return { ...wwwResult, base: `www.${bare}` };
+
+  // Her ikisi de başarısız — statüsü olan cevabı döndür
+  return {
+    html: null,
+    status: bareResult.status ?? wwwResult.status,
+    base: bare,
+  };
 }
 
 async function anyPathExists(base: string, paths: string[]): Promise<boolean> {
@@ -446,25 +502,31 @@ function detectCityFromText(text: string): string | null {
 export async function scrapeDomain(
   domain: string,
   existingCompanyName?: string | null,
-): Promise<WebScrapeResult | null> {
-  const base = domain.replace(/^https?:\/\//, "").replace(/\/$/, "").toLowerCase();
+): Promise<ScrapeOutcome> {
+  const raw = domain.replace(/^https?:\/\//, "").replace(/\/$/, "").toLowerCase();
 
-  // 1. Homepage + İletişim sayfasını paralel çek (en kritik iki kaynak)
-  const [homepageHtml, contactResult] = await Promise.all([
-    fetchHtml(`https://${base}/`),
+  // 1. Canonical base tespiti: bare domain dene, başarısız → www. fallback
+  //    Bu adım seri çalışır (www/bare ayrımını bilmeden contact URL inşa edemeyiz)
+  const homepageResult = await tryHomepage(raw);
+  const base = homepageResult.base;
+  const httpStatus = homepageResult.status;
+  const homepageHtml = homepageResult.html;
+
+  // 2. İletişim + hakkımızda sayfalarını canonical base ile paralel çek
+  const [contactResult, aboutResult] = await Promise.all([
     fetchFirstMatch(base, CONTACT_PATHS),
+    fetchFirstMatch(base, ABOUT_PATHS),
   ]);
 
-  // Her ikisi de başarısızsa erişilemeyen site
-  if (!homepageHtml && !contactResult) return null;
+  // Homepage da contact da yoksa erişilemeyen site — httpStatus'u yine de döndür
+  if (!homepageHtml && !contactResult) {
+    return { httpStatus, data: null };
+  }
 
   const homeHtml = homepageHtml ?? "";
   const contactHtml = contactResult?.html ?? "";
-  const sourceUrl = contactResult?.url ?? `https://${base}/`;
-
-  // 2. Hakkımızda sayfası (homepage'ten sonra, ayrı bir istek)
-  const aboutResult = await fetchFirstMatch(base, ABOUT_PATHS);
   const aboutHtml = aboutResult?.html ?? "";
+  const sourceUrl = contactResult?.url ?? `https://${base}/`;
 
   // 3. KVKK ve kariyer varlık kontrolleri (paralel HEAD)
   const [hasKvkkPage, hasCareersPage] = await Promise.all([
@@ -477,6 +539,7 @@ export async function scrapeDomain(
 
   const emails = extractEmails(combinedHtml);
   const email = rankBestEmail(emails);
+  const emailDomain = email ? (email.split("@")[1] ?? null) : null;
   const phone = extractPhone(contactHtml || homeHtml);
   const title = extractTitle(homeHtml);
   const metaDesc = extractMetaDesc(homeHtml);
@@ -492,32 +555,37 @@ export async function scrapeDomain(
   const address = contactText ? extractAddress(contactText) : null;
 
   // ─── Ücretsiz şehir + sektör tespiti ─────────────────────────────────────
-  // Şehir: iletişim + hakkımızda + adres metninde 81 il aranır
-  // Sektör: iletişim + hakkımızda + meta açıklaması keyword scoring
   const combinedText = [contactText, aboutText, address].filter(Boolean).join(" ");
   const sectorText = [metaDesc, title, contactText, aboutText].filter(Boolean).join(" ");
   const city = detectCityFromText(combinedText);
   const { sector, confidence: sectorConfidence } = detectSector(sectorText);
 
   // ─── Sonuç birleştirme ────────────────────────────────────────────────────
-  logger.debug({ domain: base, city, sector, sectorConfidence, email, phone: !!phone, cms: cmsDetected }, "web-scraper: tamamlandı");
+  logger.debug(
+    { domain: base, httpStatus, city, sector, sectorConfidence, email, emailDomain, phone: !!phone, cms: cmsDetected },
+    "web-scraper: tamamlandı",
+  );
 
   return {
-    phone,
-    address,
-    email,
-    companyName: title,
-    foundedYear: foundedYearRegex,
-    isB2b: isB2bRegex,
-    hasEcommerce,
-    hasKvkkPage,
-    hasCareersPage,
-    cmsDetected,
-    linkedinUrl,
-    instagramUrl,
-    city,
-    sector,
-    sectorConfidence: sectorConfidence > 0 ? sectorConfidence : null,
-    sourceUrl,
+    httpStatus,
+    data: {
+      phone,
+      address,
+      email,
+      emailDomain,
+      companyName: title,
+      foundedYear: foundedYearRegex,
+      isB2b: isB2bRegex,
+      hasEcommerce,
+      hasKvkkPage,
+      hasCareersPage,
+      cmsDetected,
+      linkedinUrl,
+      instagramUrl,
+      city,
+      sector,
+      sectorConfidence: sectorConfidence > 0 ? sectorConfidence : null,
+      sourceUrl,
+    },
   };
 }

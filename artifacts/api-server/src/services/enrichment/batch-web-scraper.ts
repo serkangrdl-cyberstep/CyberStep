@@ -1,11 +1,24 @@
 /**
  * Batch Web Contact & Company Intelligence Scraper
  *
- * lead_candidates tablosundaki web_scrape_status=NULL ve is_alive=TRUE olan
- * domainleri saatlik 4 partide işler. Tamamen ücretsiz — AI çağrısı yok.
+ * lead_candidates tablosundaki tarif bekleyen domain'leri saatlik 4 partide işler.
+ * Tamamen ücretsiz — AI çağrısı yok.
  *
- * Throughput hedefi:
- *   BATCH_SIZE=200, CONCURRENCY=10, her 15 dakika → 800/saat → ~4.5 gün backlog
+ * Rate limiting kararları:
+ *   CONCURRENCY=5 (10'dan düşürüldü): Natro/Turhost gibi paylaşımlı hosting
+ *   sağlayıcılarına paralel çok istek göndermeyi önler. Aynı IP bloğundan gelen
+ *   trafik abuse sayılıp server IP'yi blacklist'e sokabilir — bu CyberStep'in
+ *   kendi izlediği Spamhaus/SURBL listelerine düşmek demek.
+ *
+ *   INTER_CHUNK_DELAY: 5 domain'lik her chunk'tan sonra 300-600ms bekle.
+ *   User-Agent: CyberStep-Bot/1.0 +https://cyberstep.io/bot (web-scraper.ts)
+ *
+ * Resumable tasarım:
+ *   SELECT ... FOR UPDATE SKIP LOCKED ile atomik batch claim → in_progress
+ *   Server restart/crash sonrası stale in_progress satırlar resetlenir.
+ *   WHERE: NULL | failed | 90 günden eski scraped (tazeleme döngüsü)
+ *
+ * Throughput: BATCH_SIZE=200, CONCURRENCY=5, her 15 dk → ~400/saat
  */
 
 import { sql } from "drizzle-orm";
@@ -13,9 +26,13 @@ import { db } from "@workspace/db";
 import { logger } from "../../lib/logger";
 import { scrapeDomain } from "./web-scraper";
 
-const BATCH_SIZE = 200;
-const CONCURRENCY = 10;
-const BATCH_DEADLINE_MS = 18 * 60 * 1000; // 18 dk (wrapCron watchdog 25dk)
+const BATCH_SIZE        = 200;
+const CONCURRENCY       = 5;                    // Hosting sağlayıcısı koruması
+const BATCH_DEADLINE_MS = 18 * 60 * 1000;       // 18 dk (wrapCron watchdog 25dk)
+const INTER_CHUNK_DELAY = () => 300 + Math.random() * 300; // 300-600ms jitter
+const REFRESH_DAYS      = 90;                   // Kaç günde bir yeniden tara
+
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
 export interface WebScrapeBatchResult {
   processed: number;
@@ -31,25 +48,41 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
   const stats = { processed: 0, scraped: 0, no_data: 0, failed: 0 };
   const batchStart = Date.now();
 
-  // is_alive=TRUE domainleri öncelik sırasına göre al
+  // Atomik batch claim: SELECT ... FOR UPDATE SKIP LOCKED + hemen in_progress işaretle
+  // Bu sayede crash/restart sonrası aynı domain çift işlenmez.
   const rows = await db.execute<{
     id: number;
     domain: string;
     company_name: string | null;
     scraped_company_name: string | null;
   }>(sql`
-    SELECT id, domain, company_name, scraped_company_name
-    FROM lead_candidates
-    WHERE web_scrape_status IS NULL
-      AND is_alive IS TRUE
-    ORDER BY
-      CASE
-        WHEN source = 'certstream-bridge' THEN 1
-        WHEN source = 'crt_sh' OR source = 'crtsh' THEN 2
-        ELSE 3
-      END,
-      created_at ASC
-    LIMIT ${BATCH_SIZE}
+    WITH claimed AS (
+      SELECT id
+      FROM lead_candidates
+      WHERE is_alive IS TRUE
+        AND (
+          web_scrape_status IS NULL
+          OR web_scrape_status = 'failed'
+          OR (
+            web_scrape_status = 'scraped'
+            AND web_scraped_at < NOW() - INTERVAL '${sql.raw(String(REFRESH_DAYS))} days'
+          )
+        )
+      ORDER BY
+        CASE
+          WHEN source = 'certstream-bridge' THEN 1
+          WHEN source = 'crt_sh' OR source = 'crtsh' THEN 2
+          ELSE 3
+        END,
+        created_at ASC
+      LIMIT ${BATCH_SIZE}
+      FOR UPDATE SKIP LOCKED
+    )
+    UPDATE lead_candidates lc
+    SET web_scrape_status = 'in_progress'
+    FROM claimed
+    WHERE lc.id = claimed.id
+    RETURNING lc.id, lc.domain, lc.company_name, lc.scraped_company_name
   `);
 
   const candidates = rows.rows;
@@ -61,12 +94,21 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
 
   // ─── Concurrency ile işle ────────────────────────────────────────────────
   for (let i = 0; i < candidates.length; i += CONCURRENCY) {
-    // Duvar saati limiti kontrolü
     if (Date.now() - batchStart > BATCH_DEADLINE_MS) {
       logger.warn(
         { processed: stats.processed, remaining: candidates.length - stats.processed },
         "Web scrape: 18dk deadline aşıldı, kalan domainler bir sonraki çalışmaya bırakılıyor",
       );
+      // Deadline'a takılan in_progress satırları failed'e döndür — sonraki tur retry eder
+      const remaining = candidates.slice(i + CONCURRENCY);
+      if (remaining.length > 0) {
+        const ids = remaining.map(r => r.id);
+        await db.execute(sql`
+          UPDATE lead_candidates
+          SET web_scrape_status = 'failed', web_scraped_at = NOW()
+          WHERE id = ANY(${ids})
+        `).catch(() => { /* sessiz hata — zaten failed kalır */ });
+      }
       break;
     }
 
@@ -76,13 +118,15 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
       const companyName = row.company_name ?? row.scraped_company_name ?? null;
 
       try {
-        const result = await scrapeDomain(row.domain, companyName);
+        const { httpStatus, data: result } = await scrapeDomain(row.domain, companyName);
 
         if (!result) {
+          // Erişilemeyen site — httpStatus bile null olabilir (ECONNREFUSED, DNS yok)
           await db.execute(sql`
             UPDATE lead_candidates
             SET web_scrape_status = 'no_data',
-                web_scraped_at    = NOW()
+                web_scraped_at    = NOW(),
+                http_status       = ${httpStatus}
             WHERE id = ${row.id}
           `);
           stats.no_data++;
@@ -93,6 +137,7 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
             UPDATE lead_candidates SET
               web_scrape_status      = 'scraped',
               web_scraped_at         = ${now},
+              http_status            = ${httpStatus},
               web_scrape_source_url  = ${result.sourceUrl},
 
               -- İletişim (mevcut veriler korunur, yeni veri varsa ekle)
@@ -114,7 +159,7 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
               -- Coğrafya: web scrape (ücretsiz regex) > mevcut değer
               city                   = COALESCE(city, ${result.city}),
 
-              -- Sektör: mevcut (Haiku) veri varsa koru, sadece boşları doldur
+              -- Sektör: mevcut (Haiku/AI) veri varsa koru, sadece boşları doldur
               sector                 = COALESCE(sector, ${result.sector}),
               sector_confidence      = CASE
                 WHEN sector IS NULL AND ${result.sector} IS NOT NULL
@@ -144,25 +189,30 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
             WHERE id = ${row.id}
           `);
         } catch {
-          // DB yazma hatası — sonraki cron tekrar dener (web_scrape_status NULL kaldı)
+          // DB yazma hatası — sonraki cron tekrar dener (in_progress → stale cleanup)
         }
         stats.failed++;
       }
 
       stats.processed++;
     }));
+
+    // Rate limiting: hosting sağlayıcısı koruması için chunk'lar arası jitter
+    if (i + CONCURRENCY < candidates.length) {
+      await sleep(INTER_CHUNK_DELAY());
+    }
   }
 
-  const cost_estimate_usd = 0; // Tamamen ücretsiz — AI çağrısı yok
-
+  const cost_estimate_usd = 0;
   logger.info({ ...stats }, "Web scrape batch tamamlandı");
   return { ...stats, cost_estimate_usd };
 }
 
-// ─── Startup Cleanup ──────────────────────────────────────────────────────────
-// is_alive=FALSE olan domainleri hemen 'no_data' yap — HTTP çekmeye gerek yok.
-// Server restart'ta bir kez çalışır, 0 satır bulunca otomatik durur.
+// ─── Startup Temizlik Fonksiyonları ───────────────────────────────────────────
 
+/**
+ * is_alive=FALSE olan domainleri hemen 'no_data' yap — HTTP çekmeye gerek yok.
+ */
 export async function markDeadDomainsNoData(): Promise<number> {
   const result = await db.execute<{ count: string }>(sql`
     WITH updated AS (
@@ -176,4 +226,28 @@ export async function markDeadDomainsNoData(): Promise<number> {
     SELECT COUNT(*) AS count FROM updated
   `);
   return parseInt((result.rows[0] as { count: string })?.count ?? "0", 10);
+}
+
+/**
+ * Stale in_progress satırları temizler.
+ * Process crash/restart sonrası 2 saatten eski in_progress satırlar
+ * failed'e döndürülür — bir sonraki batch retry eder.
+ */
+export async function resetStaleInProgress(): Promise<number> {
+  const result = await db.execute<{ count: string }>(sql`
+    WITH updated AS (
+      UPDATE lead_candidates
+      SET web_scrape_status = 'failed'
+      WHERE web_scrape_status = 'in_progress'
+        AND web_scraped_at IS NOT NULL
+        AND web_scraped_at < NOW() - INTERVAL '2 hours'
+      RETURNING id
+    )
+    SELECT COUNT(*) AS count FROM updated
+  `);
+  const count = parseInt((result.rows[0] as { count: string })?.count ?? "0", 10);
+  if (count > 0) {
+    logger.info({ count }, "Stale in_progress web scrape satırları failed'e döndürüldü");
+  }
+  return count;
 }
