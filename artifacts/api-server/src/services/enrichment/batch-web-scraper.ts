@@ -112,7 +112,18 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
               social_instagram_url   = COALESCE(social_instagram_url, ${result.instagramUrl}),
 
               -- Coğrafya: web scrape (ücretsiz regex) > mevcut değer
-              city                   = COALESCE(city, ${result.city})
+              city                   = COALESCE(city, ${result.city}),
+
+              -- Sektör: web scrape bulursa haiku adımına gerek yok
+              sector                 = COALESCE(sector, ${result.sector}),
+              enrichment_status      = CASE
+                WHEN sector IS NULL AND ${result.sector} IS NOT NULL THEN 'enriched'
+                ELSE enrichment_status
+              END,
+              enrichment_method      = CASE
+                WHEN sector IS NULL AND ${result.sector} IS NOT NULL THEN 'web_scrape'
+                ELSE enrichment_method
+              END
 
             WHERE id = ${row.id}
           `);

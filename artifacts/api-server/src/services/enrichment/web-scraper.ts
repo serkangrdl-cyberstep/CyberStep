@@ -14,7 +14,7 @@
  */
 
 import { logger } from "../../lib/logger";
-import { TURKEY_CITIES, normalizeCity } from "./haiku-enrichment";
+import { TURKEY_CITIES, normalizeCity, SECTOR_LIST } from "./haiku-enrichment";
 
 const FETCH_TIMEOUT_MS = 6_000;
 const HEAD_TIMEOUT_MS = 4_000;
@@ -56,6 +56,7 @@ export interface WebScrapeResult {
   instagramUrl: string | null;
   // Ücretsiz regex tespiti
   city: string | null;
+  sector: string | null;
   // Meta
   sourceUrl: string;
 }
@@ -251,6 +252,126 @@ function stripHtml(html: string): string {
     .trim();
 }
 
+// ─── Ücretsiz Sektör Tespiti ─────────────────────────────────────────────────
+// Her sektör için anahtar kelimeler — metin içinde kaç tane eşleşirse o kadar puan alır.
+// En yüksek puanlı sektör seçilir (min 2 eşleşme şartı).
+
+const SECTOR_KEYWORDS: Record<string, string[]> = {
+  "Teknoloji & Yazılım": [
+    "yazılım", "bilişim", "siber güvenlik", "siber", "cloud", "bulut",
+    "uygulama", "platform", "saas", "erp", "crm", "hosting", "sunucu",
+    "veri merkezi", "dijital dönüşüm", "otomasyon", "yapay zeka", "ai",
+    "network", "altyapı", "entegrasyon", "api",
+  ],
+  "E-ticaret & Perakende": [
+    "e-ticaret", "e ticaret", "mağaza", "alışveriş", "sepete ekle",
+    "sepetim", "ürün kataloğu", "kargo", "teslimat", "indirim",
+    "online satış", "b2c", "trendyol", "n11", "hepsiburada",
+  ],
+  "Finans & Bankacılık": [
+    "banka", "bankacılık", "finans", "finansal", "sigorta",
+    "kredi", "leasing", "faktoring", "yatırım", "borsa",
+    "fon", "portföy", "muhasebe", "ödeme sistemi", "pos",
+  ],
+  "Sağlık & Klinik": [
+    "hastane", "klinik", "sağlık", "tıp", "doktor", "hekim",
+    "eczane", "ilaç", "ameliyat", "poliklinik", "diş", "dental",
+    "diyaliz", "röntgen", "mri", "laboratuvar", "hasta",
+  ],
+  "Eğitim & Üniversite": [
+    "okul", "üniversite", "eğitim", "kurs", "sertifika",
+    "öğrenci", "öğretmen", "akademi", "kolej", "dershane",
+    "mba", "lisans", "yüksek lisans", "öğretim",
+  ],
+  "İnşaat & Gayrimenkul": [
+    "inşaat", "yapı", "gayrimenkul", "emlak", "konut",
+    "villa", "daire", "proje geliştirme", "müteahhit", "tadilat",
+    "mimarlık", "mimari", "yapılaşma", "arsa", "rezidans",
+  ],
+  "Üretim & Sanayi": [
+    "üretim", "sanayi", "fabrika", "imalat", "montaj",
+    "makine", "ekipman", "çelik", "metal", "plastik",
+    "ambalaj", "kalıp", "bant", "endüstriyel",
+  ],
+  "Lojistik & Taşımacılık": [
+    "lojistik", "taşımacılık", "nakliye", "kargo", "liman",
+    "filo", "ulaştırma", "ithalat", "ihracat", "gümrük",
+    "depolama", "sevkiyat", "freight", "kurye",
+  ],
+  "Turizm & Otelcilik": [
+    "otel", "turizm", "tatil", "rezervasyon", "tur",
+    "seyahat", "konaklama", "spa", "resort", "pansiyon",
+    "apart", "villa kiralama", "incoming",
+  ],
+  "Medya & Yayıncılık": [
+    "medya", "yayın", "gazete", "dergi", "haber",
+    "televizyon", "radyo", "dijital medya", "reklam ajansı",
+    "içerik", "prodüksiyon", "reklam",
+  ],
+  "Hukuk & Danışmanlık": [
+    "hukuk", "avukat", "avukatlık", "danışmanlık", "mali müşavir",
+    "denetim", "vergi", "noter", "yönetim danışmanlığı",
+    "muhasebe", "audit", "hukuki",
+  ],
+  "Kamu & Belediye": [
+    "belediye", "kamu", "bakanlık", "müdürlük",
+    "vakıf", "dernek", "kurum", "büyükşehir", "ilçe",
+    "enstitü", "ajans", "oda ", "birlik",
+  ],
+  "Enerji & Madencilik": [
+    "enerji", "elektrik üretim", "doğalgaz", "güneş enerjisi",
+    "rüzgar", "maden", "petrol", "yenilenebilir", "santral",
+    "jeotermal", "hidroelektrik",
+  ],
+  "Tekstil & Moda": [
+    "tekstil", "moda", "giyim", "konfeksiyon", "kumaş",
+    "iplik", "dikiş", "hazır giyim", "tasarım evi",
+    "butik", "koleksiyon", "sezon",
+  ],
+  "Gıda & Restoran": [
+    "gıda", "yiyecek", "içecek", "restoran", "cafe",
+    "fırın", "lokanta", "catering", "yemek", "market",
+    "süpermarket", "organik", "gurme",
+  ],
+  "Otomotiv": [
+    "otomotiv", "araç", "otomobil", "araba", "galeri",
+    "yetkili servis", "yedek parça", "lastik", "oto ",
+    "filo kiralama", "oto kiralama",
+  ],
+  "Tarım": [
+    "tarım", "hayvancılık", "zirai", "tohum", "gübre",
+    "sulama", "çiftlik", "tarımsal", "zirai ilaç",
+    "sera", "organik tarım",
+  ],
+};
+
+// Min puan = 2 eşleşme (false positive baskılar)
+const SECTOR_MIN_SCORE = 2;
+
+function detectSectorFromText(text: string): string | null {
+  if (!text || text.length < 50) return null;
+  const lower = text.toLowerCase();
+
+  let bestSector: string | null = null;
+  let bestScore = 0;
+
+  for (const [sector, keywords] of Object.entries(SECTOR_KEYWORDS)) {
+    let score = 0;
+    for (const kw of keywords) {
+      if (lower.includes(kw)) score++;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestSector = sector;
+    }
+  }
+
+  if (bestScore < SECTOR_MIN_SCORE) return null;
+
+  // SECTOR_LIST'teki formatla eşleşiyor mu doğrula
+  return SECTOR_LIST.includes(bestSector ?? "") ? bestSector : null;
+}
+
 // ─── Ücretsiz Şehir Tespiti ───────────────────────────────────────────────────
 
 function detectCityFromText(text: string): string | null {
@@ -314,12 +435,16 @@ export async function scrapeDomain(
   const aboutText = aboutHtml ? stripHtml(aboutHtml).slice(0, 1000) : null;
   const address = contactText ? extractAddress(contactText) : null;
 
-  // ─── Ücretsiz şehir tespiti ───────────────────────────────────────────────
+  // ─── Ücretsiz şehir + sektör tespiti ─────────────────────────────────────
+  // Şehir: iletişim + hakkımızda + adres metninde 81 il aranır
+  // Sektör: iletişim + hakkımızda + meta açıklaması keyword scoring
   const combinedText = [contactText, aboutText, address].filter(Boolean).join(" ");
+  const sectorText = [metaDesc, title, contactText, aboutText].filter(Boolean).join(" ");
   const city = detectCityFromText(combinedText);
+  const sector = detectSectorFromText(sectorText);
 
   // ─── Sonuç birleştirme ────────────────────────────────────────────────────
-  logger.debug({ domain: base, city, email, phone: !!phone, cms: cmsDetected }, "web-scraper: tamamlandı");
+  logger.debug({ domain: base, city, sector, email, phone: !!phone, cms: cmsDetected }, "web-scraper: tamamlandı");
 
   return {
     phone,
@@ -335,6 +460,7 @@ export async function scrapeDomain(
     linkedinUrl,
     instagramUrl,
     city,
+    sector,
     sourceUrl,
   };
 }
