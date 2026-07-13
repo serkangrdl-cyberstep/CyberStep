@@ -1,7 +1,73 @@
-import { Shield, FileText, Database, Eye, Lock, UserCheck, Trash2, Mail, ChevronRight } from "lucide-react";
+import { Shield, FileText, Database, Eye, Lock, UserCheck, Trash2, Mail, ChevronRight, Globe } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/language-context";
+
+// ─── Web Veri Toplama Aydınlatma Metni (TR + EN) ─────────────────────────────
+const WEB_SCRAPING_NOTICE = {
+  tr: {
+    badge: "Kamuya Açık Veri İşleme",
+    title: "KİŞİSEL VERİLERİN İŞLENMESİNE İLİŞKİN AYDINLATMA METNİ",
+    controller: { label: "Veri Sorumlusu", value: "CyberStep (cyberstep.io)" },
+    rows: [
+      {
+        heading: "Kapsam",
+        body: "CyberStep, Türkiye'deki kurumsal internet varlıklarının siber risk görünürlüğünü artırmak amacıyla, kamuya açık kurumsal web sitelerinde yayımlanan iletişim bilgilerini (kurumsal e-posta, telefon, adres) otomatik yöntemlerle derler ve analiz eder.",
+      },
+      {
+        heading: "İşlenen Veriler",
+        body: "Kamuya açık web sitelerinde yayımlanmış kurumsal iletişim bilgileri, alan adı (domain), şehir ve sektör bilgisi.",
+      },
+      {
+        heading: "İşleme Amacı",
+        body: "Siber risk analizi, \"Türkiye Siber Risk Endeksi\" gibi toplu raporların hazırlanması ve kurumsal güvenlik değerlendirmesi.",
+      },
+      {
+        heading: "Hukuki Dayanak",
+        body: "6698 sayılı KVKK'nın 5/2-(f) maddesi uyarınca, ilgili kişinin temel hak ve özgürlüklerine zarar vermemek kaydıyla veri sorumlusunun meşru menfaati. Verileriniz açık rızanız aranmaksızın bu dayanakla işlenmektedir.",
+      },
+      {
+        heading: "Haklarınız",
+        body: "KVKK'nın 11. maddesi kapsamında, tarafınıza ait kişisel verilerin işlenip işlenmediğini öğrenme, işlenmişse buna itiraz etme ve silinmesini/yok edilmesini talep etme haklarına sahipsiniz. İtirazınız üzerine, size ait kişisel iletişim verileri (e-posta, telefon, adres) sistemlerimizden silinir; kişisel nitelik taşımayan alan adı, şehir ve sektör bilgileri anonim olarak kalabilir.",
+      },
+      {
+        heading: "Başvuru",
+        body: "Taleplerinizi kvkk@cyberstep.io adresine iletebilirsiniz. Başvurunuz en kısa sürede ve her hâlükârda yasal süreler içinde sonuçlandırılacaktır.",
+      },
+    ],
+  },
+  en: {
+    badge: "Public Data Processing",
+    title: "PERSONAL DATA PROCESSING NOTICE",
+    controller: { label: "Data Controller", value: "CyberStep (cyberstep.io)" },
+    rows: [
+      {
+        heading: "Scope",
+        body: "CyberStep collects and analyzes contact information (corporate email, phone, address) that is publicly published on corporate websites, in order to improve cyber-risk visibility of organizations in Türkiye.",
+      },
+      {
+        heading: "Data Processed",
+        body: "Publicly available corporate contact information, domain name, city, and sector.",
+      },
+      {
+        heading: "Purpose",
+        body: "Cyber-risk analysis, preparation of aggregate reports such as the \"Türkiye Cyber Risk Index,\" and corporate security assessment.",
+      },
+      {
+        heading: "Legal Basis",
+        body: "The legitimate interest of the data controller under Article 5/2-(f) of Turkish Data Protection Law No. 6698 (KVKK), provided that the fundamental rights and freedoms of the data subject are not harmed. Your data is processed on this basis without requiring your explicit consent.",
+      },
+      {
+        heading: "Your Rights",
+        body: "Under Article 11 of KVKK, you have the right to learn whether your personal data is being processed, to object to such processing, and to request its erasure. Upon your objection, your personal contact data (email, phone, address) will be removed from our systems; non-personal information such as domain name, city, and sector may be retained in anonymized form.",
+      },
+      {
+        heading: "Requests",
+        body: "Please send your requests to kvkk@cyberstep.io. Your request will be resolved as soon as possible and within the statutory timeframes.",
+      },
+    ],
+  },
+};
 
 const SECTIONS = [
   {
@@ -65,6 +131,7 @@ export default function Kvkk() {
   });
 
   const kvkkContent = settings?.["kvkk.content"];
+  const notice = lang === "en" ? WEB_SCRAPING_NOTICE.en : WEB_SCRAPING_NOTICE.tr;
 
   return (
     <div className="min-h-screen bg-background">
@@ -82,6 +149,48 @@ export default function Kvkk() {
 
       {/* Content */}
       <div className="container mx-auto px-4 max-w-4xl py-12">
+
+        {/* ── Kamuya Açık Veri İşleme Aydınlatma Metni ─────────────────── */}
+        <div className="bg-card border-2 border-emerald-200 dark:border-emerald-900 rounded-2xl overflow-hidden mb-10">
+          {/* Başlık */}
+          <div className="flex items-center gap-3 px-6 py-4 bg-emerald-50 dark:bg-emerald-950/40 border-b border-emerald-200 dark:border-emerald-900">
+            <Globe className="h-5 w-5 text-emerald-600 shrink-0" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
+              {notice.badge}
+            </span>
+          </div>
+          <div className="px-6 py-6 space-y-5">
+            <h2 className="text-base font-bold tracking-wide text-foreground">
+              {notice.title}
+            </h2>
+            {/* Veri Sorumlusu satırı */}
+            <div className="flex items-center gap-3 py-2 px-3 rounded-lg bg-muted/50 text-sm">
+              <Shield className="h-4 w-4 text-emerald-600 shrink-0" />
+              <span className="font-medium text-muted-foreground">{notice.controller.label}:</span>
+              <span className="font-semibold text-foreground">{notice.controller.value}</span>
+            </div>
+            {/* Madde satırları */}
+            {notice.rows.map(({ heading, body }) => (
+              <div key={heading}>
+                <div className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">
+                  {heading}
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
+              </div>
+            ))}
+            {/* E-posta bağlantısı */}
+            <div className="pt-2 border-t border-border">
+              <a
+                href="mailto:kvkk@cyberstep.io"
+                className="inline-flex items-center gap-2 text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+              >
+                <Mail className="h-4 w-4" />
+                kvkk@cyberstep.io
+              </a>
+            </div>
+          </div>
+        </div>
+
         {kvkkContent && (
           <div className="bg-card border rounded-2xl p-6 mb-8 prose prose-slate dark:prose-invert max-w-none">
             <pre className="whitespace-pre-wrap font-sans text-sm text-foreground leading-relaxed">{kvkkContent}</pre>
