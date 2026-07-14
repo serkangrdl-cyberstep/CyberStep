@@ -112,6 +112,7 @@ router.get("/admin-panel/enrichment/dashboard", requireAdmin, async (_req: Reque
         total: number; sector_filled: number; city_filled: number;
         both_filled: number; enriched: number; pending: number; no_match: number; failed: number;
         last_web_scrape_run: string | null; last_sector_run: string | null;
+        web_scrape_done: number; email_filled: number; phone_filled: number; scrape_pending: number;
       }>(sql`
         SELECT
           COUNT(*)                                                               AS total,
@@ -124,7 +125,12 @@ router.get("/admin-panel/enrichment/dashboard", requireAdmin, async (_req: Reque
           COUNT(*) FILTER (WHERE enrichment_status = 'no_match')               AS no_match,
           COUNT(*) FILTER (WHERE enrichment_status = 'failed')                 AS failed,
           MAX(web_scraped_at)                                                   AS last_web_scrape_run,
-          MAX(sector_enriched_at)                                               AS last_sector_run
+          MAX(sector_enriched_at)                                               AS last_sector_run,
+          COUNT(*) FILTER (WHERE web_scrape_status = 'scraped')                AS web_scrape_done,
+          COUNT(*) FILTER (WHERE web_scrape_email IS NOT NULL)                 AS email_filled,
+          COUNT(*) FILTER (WHERE scraped_phone IS NOT NULL)                    AS phone_filled,
+          COUNT(*) FILTER (WHERE web_scrape_status IS NULL
+                              OR web_scrape_status = 'failed')                 AS scrape_pending
         FROM lead_candidates
       `),
 
