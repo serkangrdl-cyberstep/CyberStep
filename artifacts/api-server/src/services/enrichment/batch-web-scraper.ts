@@ -181,7 +181,7 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
               sector                 = COALESCE(sector, ${result.sector}),
               sector_confidence      = CASE
                 WHEN sector IS NULL AND ${result.sector} IS NOT NULL
-                  THEN ${result.sectorConfidence !== null ? String(result.sectorConfidence) : null}
+                  THEN ${result.sectorConfidence !== null ? String(result.sectorConfidence) : null}::numeric
                 ELSE sector_confidence
               END,
               enrichment_status      = CASE
