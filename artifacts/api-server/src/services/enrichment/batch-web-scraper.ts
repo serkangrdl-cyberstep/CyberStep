@@ -178,18 +178,18 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
               pii_classification     = ${result.piiClassification},
 
               -- Sektör: mevcut (Haiku/AI) veri varsa koru, sadece boşları doldur
-              sector                 = COALESCE(sector, ${result.sector}),
+              sector                 = COALESCE(sector, ${result.sector}::varchar),
               sector_confidence      = CASE
-                WHEN sector IS NULL AND ${result.sector} IS NOT NULL
-                  THEN ${result.sectorConfidence !== null ? String(result.sectorConfidence) : null}::numeric
+                WHEN sector IS NULL AND ${result.sector}::varchar IS NOT NULL
+                  THEN ${result.sectorConfidence !== null ? String(result.sectorConfidence) : null}::varchar
                 ELSE sector_confidence
               END,
               enrichment_status      = CASE
-                WHEN sector IS NULL AND ${result.sector} IS NOT NULL THEN 'enriched'
+                WHEN sector IS NULL AND ${result.sector}::varchar IS NOT NULL THEN 'enriched'
                 ELSE enrichment_status
               END,
               enrichment_method      = CASE
-                WHEN sector IS NULL AND ${result.sector} IS NOT NULL THEN 'web_scrape'
+                WHEN sector IS NULL AND ${result.sector}::varchar IS NOT NULL THEN 'web_scrape'
                 ELSE enrichment_method
               END
 
