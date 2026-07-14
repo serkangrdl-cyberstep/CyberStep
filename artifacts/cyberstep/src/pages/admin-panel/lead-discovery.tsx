@@ -4217,7 +4217,7 @@ export default function AdminLeadDiscovery() {
                 {/* İlerleme kartları */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
-                    { label: "Toplam Domain", value: enrichmentDash.progress.total.toLocaleString("tr"), sub: "lead_candidates", color: "text-slate-300" },
+                    { label: "Toplam Domain", value: enrichmentDash.progress.total.toLocaleString("tr"), sub: `${(enrichmentDash.progress.alive_total ?? 0).toLocaleString("tr")} canlı`, color: "text-slate-300" },
                     { label: "Sektör Dolu", value: enrichmentDash.progress.sector_filled.toLocaleString("tr"), sub: `%${Math.round(enrichmentDash.progress.sector_filled / enrichmentDash.progress.total * 100)}`, color: "text-emerald-400" },
                     { label: "Şehir Dolu", value: enrichmentDash.progress.city_filled.toLocaleString("tr"), sub: `%${Math.round(enrichmentDash.progress.city_filled / enrichmentDash.progress.total * 100)}`, color: "text-blue-400" },
                     { label: "Her İkisi Dolu", value: enrichmentDash.progress.both_filled.toLocaleString("tr"), sub: `%${Math.round(enrichmentDash.progress.both_filled / enrichmentDash.progress.total * 100)}`, color: "text-cyan-400" },
