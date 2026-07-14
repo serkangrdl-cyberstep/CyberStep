@@ -112,7 +112,7 @@ router.get("/admin-panel/enrichment/dashboard", requireAdmin, async (_req: Reque
         total: number; sector_filled: number; city_filled: number;
         both_filled: number; enriched: number; pending: number; no_match: number; failed: number;
         last_web_scrape_run: string | null; last_sector_run: string | null;
-        web_scrape_done: number; email_filled: number; phone_filled: number; scrape_pending: number;
+        web_scrape_done: number; web_scrape_no_data: number; email_filled: number; phone_filled: number; scrape_pending: number; alive_total: number;
       }>(sql`
         SELECT
           COUNT(*)                                                               AS total,
@@ -127,10 +127,13 @@ router.get("/admin-panel/enrichment/dashboard", requireAdmin, async (_req: Reque
           MAX(web_scraped_at)                                                   AS last_web_scrape_run,
           MAX(sector_enriched_at)                                               AS last_sector_run,
           COUNT(*) FILTER (WHERE web_scrape_status = 'scraped')                AS web_scrape_done,
+          COUNT(*) FILTER (WHERE web_scrape_status = 'no_data')               AS web_scrape_no_data,
           COUNT(*) FILTER (WHERE web_scrape_email IS NOT NULL)                 AS email_filled,
           COUNT(*) FILTER (WHERE scraped_phone IS NOT NULL)                    AS phone_filled,
-          COUNT(*) FILTER (WHERE web_scrape_status IS NULL
-                              OR web_scrape_status = 'failed')                 AS scrape_pending
+          COUNT(*) FILTER (WHERE is_alive IS TRUE
+                             AND (web_scrape_status IS NULL
+                               OR web_scrape_status = 'failed'))               AS scrape_pending,
+          COUNT(*) FILTER (WHERE is_alive IS TRUE)                             AS alive_total
         FROM lead_candidates
       `),
 
@@ -198,10 +201,12 @@ router.get("/admin-panel/enrichment/dashboard", requireAdmin, async (_req: Reque
         last_web_scrape_run: p.last_web_scrape_run ?? null,
         last_sector_run:     p.last_sector_run ?? null,
         batch_running:    batchRunning,
-        web_scrape_done:  Number(p.web_scrape_done ?? 0),
-        email_filled:     Number(p.email_filled ?? 0),
-        phone_filled:     Number(p.phone_filled ?? 0),
-        scrape_pending:   Number(p.scrape_pending ?? 0),
+        web_scrape_done:     Number(p.web_scrape_done ?? 0),
+        web_scrape_no_data:  Number(p.web_scrape_no_data ?? 0),
+        email_filled:        Number(p.email_filled ?? 0),
+        phone_filled:        Number(p.phone_filled ?? 0),
+        scrape_pending:      Number(p.scrape_pending ?? 0),
+        alive_total:         Number(p.alive_total ?? 0),
       },
       sector_dist: sectorDist.rows.map(r => ({ sector: r.sector, count: Number(r.count) })),
       city_dist:   cityDist.rows.map(r => ({ city: r.city, count: Number(r.count) })),

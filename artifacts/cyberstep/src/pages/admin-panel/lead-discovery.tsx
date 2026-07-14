@@ -161,7 +161,7 @@ interface EnrichmentDashboard {
     total: number; sector_filled: number; city_filled: number; both_filled: number;
     enriched: number; pending: number; no_match: number; failed: number;
     last_web_scrape_run: string | null; last_sector_run: string | null; batch_running: boolean;
-    web_scrape_done: number; email_filled: number; phone_filled: number; scrape_pending: number;
+    web_scrape_done: number; web_scrape_no_data: number; email_filled: number; phone_filled: number; scrape_pending: number; alive_total: number;
   };
   sector_dist: { sector: string; count: number }[];
   city_dist: { city: string; count: number }[];
@@ -4235,11 +4235,28 @@ export default function AdminLeadDiscovery() {
                 {/* Web Scraper metrikleri */}
                 <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-0.5">Web Scraper</div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {(() => {
+                    const alive = enrichmentDash.progress.alive_total || 1;
+                    return [
+                      { label: "Canlı Domain", value: (enrichmentDash.progress.alive_total ?? 0).toLocaleString("tr"), sub: `${Math.round((enrichmentDash.progress.alive_total ?? 0) / enrichmentDash.progress.total * 100)}% is_alive=true`, color: "text-slate-300" },
+                      { label: "Scraped", value: (enrichmentDash.progress.web_scrape_done ?? 0).toLocaleString("tr"), sub: `${Math.round((enrichmentDash.progress.web_scrape_done ?? 0) / alive * 100)}% tamamlandı`, color: "text-emerald-400" },
+                      { label: "Bekleyen (Canlı)", value: (enrichmentDash.progress.scrape_pending ?? 0).toLocaleString("tr"), sub: "is_alive=TRUE, scrape yok/failed", color: "text-yellow-400" },
+                      { label: "No Data", value: (enrichmentDash.progress.web_scrape_no_data ?? 0).toLocaleString("tr"), sub: "site cevap verdi, veri yok", color: "text-slate-500" },
+                    ];
+                  })().map(c => (
+                    <Card key={c.label}>
+                      <CardContent className="pt-4 pb-3">
+                        <div className={`text-2xl font-bold leading-none ${c.color}`}>{c.value}</div>
+                        <div className="text-xs font-medium mt-1">{c.label}</div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">{c.sub}</div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
-                    { label: "Scraped", value: (enrichmentDash.progress.web_scrape_done ?? 0).toLocaleString("tr"), sub: `${Math.round((enrichmentDash.progress.web_scrape_done ?? 0) / enrichmentDash.progress.total * 100)}% tamamlandı`, color: "text-emerald-400" },
-                    { label: "Bekleyen", value: (enrichmentDash.progress.scrape_pending ?? 0).toLocaleString("tr"), sub: "scrape edilmedi / failed", color: "text-yellow-400" },
-                    { label: "E-posta Dolu", value: (enrichmentDash.progress.email_filled ?? 0).toLocaleString("tr"), sub: `${Math.round((enrichmentDash.progress.email_filled ?? 0) / enrichmentDash.progress.total * 100)}% kapsama`, color: "text-cyan-400" },
-                    { label: "Telefon Dolu", value: (enrichmentDash.progress.phone_filled ?? 0).toLocaleString("tr"), sub: `${Math.round((enrichmentDash.progress.phone_filled ?? 0) / enrichmentDash.progress.total * 100)}% kapsama`, color: "text-violet-400" },
+                    { label: "E-posta Dolu", value: (enrichmentDash.progress.email_filled ?? 0).toLocaleString("tr"), sub: `${Math.round((enrichmentDash.progress.email_filled ?? 0) / (enrichmentDash.progress.alive_total || 1) * 100)}% canlı kapsama`, color: "text-cyan-400" },
+                    { label: "Telefon Dolu", value: (enrichmentDash.progress.phone_filled ?? 0).toLocaleString("tr"), sub: `${Math.round((enrichmentDash.progress.phone_filled ?? 0) / (enrichmentDash.progress.alive_total || 1) * 100)}% canlı kapsama`, color: "text-violet-400" },
                   ].map(c => (
                     <Card key={c.label}>
                       <CardContent className="pt-4 pb-3">
