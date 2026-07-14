@@ -114,30 +114,45 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
 
     const chunk = candidates.slice(i, i + CONCURRENCY);
 
-    await Promise.all(chunk.map(async (row) => {
-      const companyName = row.company_name ?? row.scraped_company_name ?? null;
+    // ─── Faz 1: HTTP fetch'leri eş zamanlı yap (DB bağlantısı tutma) ──────────
+    // DB yazımları fetch sırasında YAPILMAZ — uzun HTTP timeout'ları DB
+    // bağlantılarını boşta tutup "connection terminated" hatasına yol açıyordu.
+    type FetchResult =
+      | { id: number; domain: string; status: "no_data"; httpStatus: number | null }
+      | { id: number; domain: string; status: "scraped"; httpStatus: number | null; result: Awaited<ReturnType<typeof scrapeDomain>>["data"] & object }
+      | { id: number; domain: string; status: "fetch_error"; err: unknown };
 
+    const fetchResults = await Promise.all(chunk.map(async (row): Promise<FetchResult> => {
+      const companyName = row.company_name ?? row.scraped_company_name ?? null;
       try {
         const { httpStatus, data: result } = await scrapeDomain(row.domain, companyName);
+        if (!result) return { id: row.id, domain: row.domain, status: "no_data", httpStatus };
+        return { id: row.id, domain: row.domain, status: "scraped", httpStatus, result };
+      } catch (err) {
+        return { id: row.id, domain: row.domain, status: "fetch_error", err };
+      }
+    }));
 
-        if (!result) {
-          // Erişilemeyen site — httpStatus bile null olabilir (ECONNREFUSED, DNS yok)
+    // ─── Faz 2: DB yazımları sıralı yap (bağlantı pool koruması) ─────────────
+    for (const fr of fetchResults) {
+      try {
+        if (fr.status === "no_data") {
           await db.execute(sql`
             UPDATE lead_candidates
             SET web_scrape_status = 'no_data',
                 web_scraped_at    = NOW(),
-                http_status       = ${httpStatus}
-            WHERE id = ${row.id}
+                http_status       = ${fr.httpStatus}
+            WHERE id = ${fr.id}
           `);
           stats.no_data++;
-        } else {
+        } else if (fr.status === "scraped") {
+          const { result } = fr;
           const now = new Date();
-
           await db.execute(sql`
             UPDATE lead_candidates SET
               web_scrape_status      = 'scraped',
               web_scraped_at         = ${now},
-              http_status            = ${httpStatus},
+              http_status            = ${fr.httpStatus},
               web_scrape_source_url  = ${result.sourceUrl},
 
               -- İletişim (mevcut veriler korunur, yeni veri varsa ekle)
@@ -178,44 +193,42 @@ export async function runWebScrapeBatch(): Promise<WebScrapeBatchResult> {
                 ELSE enrichment_method
               END
 
-            WHERE id = ${row.id}
+            WHERE id = ${fr.id}
           `);
-          // ─── KVKK accountability log ──────────────────────────────────────
-          // PII yakalanmışsa işleme kaydı yaz (hesap verebilirlik).
+          // ─── KVKK accountability log ────────────────────────────────────────
           const hasPii = !!(result.email || result.phone || result.address);
           if (hasPii) {
             await db.execute(sql`
               INSERT INTO data_processing_log
                 (lead_candidate_id, domain, data_collected, pii_classification, source_url)
               VALUES (
-                ${row.id},
-                ${row.domain},
+                ${fr.id},
+                ${fr.domain},
                 ${JSON.stringify({ email: !!result.email, phone: !!result.phone, address: !!result.address })},
                 ${result.piiClassification},
                 ${result.sourceUrl}
               )
             `).catch(() => { /* log kaydı başarısız olsa da scrape verisi korunur */ });
           }
-
           stats.scraped++;
-        }
-      } catch (err) {
-        logger.warn({ domain: row.domain, err }, "Web scrape domain hatası");
-        try {
+        } else {
+          // fetch_error
+          logger.warn({ domain: fr.domain, err: fr.err }, "Web scrape domain hatası");
           await db.execute(sql`
             UPDATE lead_candidates
             SET web_scrape_status = 'failed',
                 web_scraped_at    = NOW()
-            WHERE id = ${row.id}
+            WHERE id = ${fr.id}
           `);
-        } catch {
-          // DB yazma hatası — sonraki cron tekrar dener (in_progress → stale cleanup)
+          stats.failed++;
         }
+      } catch (dbErr) {
+        logger.warn({ domain: fr.domain, err: dbErr }, "Web scrape DB yazma hatası");
+        // DB yazma başarısız — in_progress kalır, stale cleanup sonraki çalışmada retry eder
         stats.failed++;
       }
-
       stats.processed++;
-    }));
+    }
 
     // Rate limiting: hosting sağlayıcısı koruması için chunk'lar arası jitter
     if (i + CONCURRENCY < candidates.length) {
